@@ -1,0 +1,70 @@
+{% extends 'layouts/admin_base.html' %}
+
+{% block admin_content %}
+<div class="flex justify-between items-center mb-8">
+    <div>
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Manage Choices</h1>
+        <p class="text-gray-500 dark:text-gray-400 mt-1">Question: <strong>{{ question.text }}</strong></p>
+    </div>
+    <a href="{% url 'manage_assessment_questions' question.assessment.id %}" class="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition">
+        <i class="fas fa-arrow-left mr-2"></i> Back to Questions
+    </a>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <!-- Choice List -->
+    <div class="lg:col-span-2 space-y-4">
+        {% for choice in choices %}
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 flex justify-between items-center group">
+            <div class="flex items-center gap-3">
+                {% if choice.is_correct %}
+                <i class="fas fa-check-circle text-green-500 text-xl"></i>
+                {% else %}
+                <i class="far fa-circle text-gray-400 text-xl"></i>
+                {% endif %}
+                <span class="font-medium text-gray-900 dark:text-white">{{ choice.text }}</span>
+                {% if choice.is_correct %}
+                <span class="text-xs bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 px-2 py-0.5 rounded ml-2">Correct Answer</span>
+                {% endif %}
+            </div>
+            
+            <form method="post" onsubmit="return confirm('Delete this choice?');">
+                {% csrf_token %}
+                <input type="hidden" name="choice_id" value="{{ choice.id }}">
+                <button type="submit" name="delete_choice" class="text-red-400 hover:text-red-600 p-2 transition">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </form>
+        </div>
+        {% empty %}
+        <div class="text-center py-12 bg-white dark:bg-gray-800 rounded-xl border border-dashed border-gray-300 dark:border-gray-700">
+            <p class="text-gray-500 dark:text-gray-400">No choices added yet.</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Add Choice Form -->
+    <div class="lg:col-span-1">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 sticky top-24">
+            <h3 class="font-bold text-lg text-gray-900 dark:text-white mb-4">Add New Choice</h3>
+            <form method="post" class="space-y-4">
+                {% csrf_token %}
+                
+                <div class="space-y-1">
+                    <label class="block text-xs font-bold text-gray-700 dark:text-gray-300">Choice Text</label>
+                    {{ choice_form.text }}
+                </div>
+                
+                <div class="flex items-center gap-2 pt-2">
+                    {{ choice_form.is_correct }}
+                    <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Mark as Correct Answer</label>
+                </div>
+
+                <button type="submit" name="create_choice" class="w-full py-2 bg-primary text-white font-bold rounded-lg hover:bg-blue-600 transition shadow-lg mt-4">
+                    Add Choice
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

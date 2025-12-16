@@ -1,0 +1,320 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="bg-gray-50 dark:bg-[#050B14] min-h-screen transition-colors duration-300">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <div class="flex flex-col md:flex-row justify-between items-center mb-8">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Student Dashboard</h1>
+                <p class="text-gray-500 dark:text-gray-400 mt-1">Welcome back, {{ user.first_name|default:user.username }}!</p>
+            </div>
+            <div class="mt-4 md:mt-0">
+                <a href="{% url 'course_list' %}" class="inline-flex items-center px-4 py-2 bg-primary hover:bg-blue-700 text-white rounded-lg transition-colors shadow-lg shadow-blue-500/30">
+                    <i class="fas fa-plus mr-2"></i> Browse Courses
+                </a>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            <!-- Sidebar -->
+            <div class="lg:col-span-1">
+                <div class="bg-white dark:bg-[#0F1623] rounded-xl shadow-md border border-gray-200 dark:border-gray-800 overflow-hidden sticky top-24">
+                    <!-- Profile Summary -->
+                    <div class="p-6 text-center border-b border-gray-100 dark:border-gray-800">
+                        {% if user.profile_picture %}
+                        <img src="{{ user.profile_picture.url }}" alt="{{ user.username }}" class="w-20 h-20 rounded-full mx-auto mb-3 object-cover ring-2 ring-primary/20">
+                        {% else %}
+                        <div class="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-blue-600 text-white flex items-center justify-center text-2xl font-bold mx-auto mb-3 shadow-lg shadow-blue-500/20">
+                            {{ user.username|first|upper }}
+                        </div>
+                        {% endif %}
+                        <h2 class="text-lg font-bold text-gray-900 dark:text-white">{{ user.username }}</h2>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">{{ user.email }}</p>
+                    </div>
+                    
+                    <!-- Navigation -->
+                    <nav class="p-4 space-y-1">
+                        <button onclick="switchTab('overview')" id="tab-overview" class="w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg bg-blue-50 dark:bg-blue-900/20 text-primary dark:text-blue-400 transition-colors">
+                            <i class="fas fa-home w-6"></i> Overview
+                        </button>
+                        <button onclick="switchTab('courses')" id="tab-courses" class="w-full flex items-center px-4 py-3 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-lg transition-colors">
+                            <i class="fas fa-book-open w-6"></i> My Courses
+                        </button>
+                        <button onclick="switchTab('certificates')" id="tab-certificates" class="w-full flex items-center px-4 py-3 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-lg transition-colors">
+                            <i class="fas fa-certificate w-6"></i> Certificates
+                        </button>
+                        <a href="{% url 'profile' %}" class="w-full flex items-center px-4 py-3 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-lg transition-colors">
+                            <i class="fas fa-user-cog w-6"></i> Settings
+                        </a>
+                        <div class="pt-4 mt-4 border-t border-gray-100 dark:border-gray-800">
+                            <a href="{% url 'logout' %}" class="w-full flex items-center px-4 py-3 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-lg transition-colors">
+                                <i class="fas fa-sign-out-alt w-6"></i> Logout
+                            </a>
+                        </div>
+                    </nav>
+                </div>
+            </div>
+
+            <!-- Main Content Area -->
+            <div class="lg:col-span-3">
+                
+                <!-- Overview Section -->
+                <div id="view-overview" class="space-y-8 animate-fade-in">
+                    <!-- Stats Grid -->
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="bg-white dark:bg-[#0F1623] p-5 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800">
+                            <div class="text-gray-500 dark:text-gray-400 text-sm mb-1">Enrolled</div>
+                            <div class="text-2xl font-bold text-gray-900 dark:text-white">{{ total_enrolled }}</div>
+                        </div>
+                        <div class="bg-white dark:bg-[#0F1623] p-5 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800">
+                            <div class="text-gray-500 dark:text-gray-400 text-sm mb-1">In Progress</div>
+                            <div class="text-2xl font-bold text-blue-600 dark:text-blue-400">{{ total_active }}</div>
+                        </div>
+                        <div class="bg-white dark:bg-[#0F1623] p-5 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800">
+                            <div class="text-gray-500 dark:text-gray-400 text-sm mb-1">Completed</div>
+                            <div class="text-2xl font-bold text-green-600 dark:text-green-400">{{ total_completed }}</div>
+                        </div>
+                        <div class="bg-white dark:bg-[#0F1623] p-5 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800">
+                            <div class="text-gray-500 dark:text-gray-400 text-sm mb-1">Certificates</div>
+                            <div class="text-2xl font-bold text-purple-600 dark:text-purple-400">{{ total_certificates }}</div>
+                        </div>
+                    </div>
+
+                    <!-- Continue Learning -->
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Continue Learning</h2>
+                        {% if active_courses %}
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {% for enrollment in active_courses %}
+                                    <div class="flex flex-col bg-white dark:bg-[#0B0F19] rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 border border-gray-200 dark:border-gray-700 h-full">
+                                        <div class="relative h-40">
+                                            {% if enrollment.course.thumbnail %}
+                                            <img src="{{ enrollment.course.thumbnail.url }}" alt="{{ enrollment.course.title }}" class="w-full h-full object-cover">
+                                            {% else %}
+                                            <div class="w-full h-full bg-gray-200 dark:bg-gray-800 flex items-center justify-center">
+                                                <i class="fas fa-graduation-cap text-3xl text-gray-400"></i>
+                                            </div>
+                                            {% endif %}
+                                            <div class="absolute top-2 right-2 bg-white/90 dark:bg-black/80 backdrop-blur-sm px-2 py-1 rounded text-xs font-bold text-gray-800 dark:text-white">
+                                                {{ enrollment.course.level }}
+                                            </div>
+                                        </div>
+                                        <div class="p-5 flex-1 flex flex-col">
+                                            <h3 class="font-bold text-lg mb-2 text-gray-900 dark:text-white line-clamp-1" title="{{ enrollment.course.title }}">{{ enrollment.course.title }}</h3>
+                                            
+                                            <div class="mt-auto pt-4">
+                                                <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400 mb-2">
+                                                    <span>Progress</span>
+                                                    <span>{{ enrollment.current_progress }}%</span>
+                                                </div>
+                                                <div class="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-2 mb-4 overflow-hidden">
+                                                    <div class="bg-primary h-full rounded-full transition-all duration-1000 ease-out" style="width: {{ enrollment.current_progress }}%"></div>
+                                                </div>
+                                                
+                                                <a href="{% url 'course_detail' enrollment.course.slug %}" class="block w-full py-2.5 text-center rounded-lg font-medium transition-colors bg-primary hover:bg-blue-700 text-white">
+                                                    Continue Learning
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="bg-white dark:bg-[#0F1623] rounded-xl p-8 text-center border border-gray-200 dark:border-gray-800">
+                                <div class="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <i class="fas fa-book-reader text-2xl text-gray-400"></i>
+                                </div>
+                                <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">No active courses</h3>
+                                <p class="text-gray-500 dark:text-gray-400 mb-6">You don't have any courses in progress right now.</p>
+                                <a href="{% url 'course_list' %}" class="text-primary hover:underline">Browse Catalog &rarr;</a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- My Courses Section -->
+                <div id="view-courses" class="hidden space-y-8 animate-fade-in">
+                    <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">My Courses</h2>
+                    
+                    <div class="space-y-8">
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                                <span class="w-2 h-2 bg-blue-500 rounded-full mr-2"></span> In Progress
+                            </h3>
+                            {% if active_courses %}
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    {% for enrollment in active_courses %}
+                                        <div class="flex flex-col bg-white dark:bg-[#0B0F19] rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 border border-gray-200 dark:border-gray-700 h-full">
+                                            <div class="relative h-40">
+                                                {% if enrollment.course.thumbnail %}
+                                                <img src="{{ enrollment.course.thumbnail.url }}" alt="{{ enrollment.course.title }}" class="w-full h-full object-cover">
+                                                {% else %}
+                                                <div class="w-full h-full bg-gray-200 dark:bg-gray-800 flex items-center justify-center">
+                                                    <i class="fas fa-graduation-cap text-3xl text-gray-400"></i>
+                                                </div>
+                                                {% endif %}
+                                                <div class="absolute top-2 right-2 bg-white/90 dark:bg-black/80 backdrop-blur-sm px-2 py-1 rounded text-xs font-bold text-gray-800 dark:text-white">
+                                                    {{ enrollment.course.level }}
+                                                </div>
+                                            </div>
+                                            <div class="p-5 flex-1 flex flex-col">
+                                                <h3 class="font-bold text-lg mb-2 text-gray-900 dark:text-white line-clamp-1" title="{{ enrollment.course.title }}">{{ enrollment.course.title }}</h3>
+                                                
+                                                <div class="mt-auto pt-4">
+                                                    <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400 mb-2">
+                                                        <span>Progress</span>
+                                                        <span>{{ enrollment.current_progress }}%</span>
+                                                    </div>
+                                                    <div class="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-2 mb-4 overflow-hidden">
+                                                        <div class="bg-primary h-full rounded-full transition-all duration-1000 ease-out" style="width: {{ enrollment.current_progress }}%"></div>
+                                                    </div>
+                                                    
+                                                    <a href="{% url 'course_detail' enrollment.course.slug %}" class="block w-full py-2.5 text-center rounded-lg font-medium transition-colors bg-primary hover:bg-blue-700 text-white">
+                                                        Continue Learning
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <p class="text-gray-500 dark:text-gray-400 italic">No active courses.</p>
+                            {% endif %}
+                        </div>
+
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                                <span class="w-2 h-2 bg-green-500 rounded-full mr-2"></span> Completed
+                            </h3>
+                            {% if completed_courses %}
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    {% for enrollment in completed_courses %}
+                                        <div class="flex flex-col bg-white dark:bg-[#0B0F19] rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 border border-gray-200 dark:border-gray-700 h-full">
+                                            <div class="relative h-40">
+                                                {% if enrollment.course.thumbnail %}
+                                                <img src="{{ enrollment.course.thumbnail.url }}" alt="{{ enrollment.course.title }}" class="w-full h-full object-cover">
+                                                {% else %}
+                                                <div class="w-full h-full bg-gray-200 dark:bg-gray-800 flex items-center justify-center">
+                                                    <i class="fas fa-graduation-cap text-3xl text-gray-400"></i>
+                                                </div>
+                                                {% endif %}
+                                                <div class="absolute top-2 right-2 bg-green-500 text-white px-2 py-1 rounded text-xs font-bold">
+                                                    Completed
+                                                </div>
+                                            </div>
+                                            <div class="p-5 flex-1 flex flex-col">
+                                                <h3 class="font-bold text-lg mb-2 text-gray-900 dark:text-white line-clamp-1" title="{{ enrollment.course.title }}">{{ enrollment.course.title }}</h3>
+                                                
+                                                <div class="mt-auto pt-4">
+                                                    <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400 mb-2">
+                                                        <span>Progress</span>
+                                                        <span>100%</span>
+                                                    </div>
+                                                    <div class="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-2 mb-4 overflow-hidden">
+                                                        <div class="bg-green-500 h-full rounded-full" style="width: 100%"></div>
+                                                    </div>
+                                                    
+                                                    <a href="{% url 'course_detail' enrollment.course.slug %}" class="block w-full py-2.5 text-center rounded-lg font-medium transition-colors bg-green-600 hover:bg-green-700 text-white">
+                                                        Review Course
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <p class="text-gray-500 dark:text-gray-400 italic">No completed courses yet.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Certificates Section -->
+                <div id="view-certificates" class="hidden space-y-8 animate-fade-in">
+                    <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">My Certificates</h2>
+                    
+                    {% if certificates %}
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {% for cert in certificates %}
+                            <div class="bg-white dark:bg-[#0F1623] rounded-xl overflow-hidden shadow-md border border-gray-200 dark:border-gray-800 hover:shadow-lg transition-shadow">
+                                <div class="h-40 bg-gray-100 dark:bg-gray-800 relative group">
+                                    <!-- Preview/Thumbnail placeholder -->
+                                    <div class="absolute inset-0 flex items-center justify-center text-gray-300 dark:text-gray-600">
+                                        <i class="fas fa-certificate text-5xl"></i>
+                                    </div>
+                                    <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                        {% if cert.file %}
+                                        <a href="{{ cert.file.url }}" target="_blank" class="px-4 py-2 bg-white text-gray-900 rounded-lg font-medium hover:bg-gray-100 transition-colors">
+                                            View Certificate
+                                        </a>
+                                        {% else %}
+                                        <span class="text-white">Generating...</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="p-6">
+                                    <h3 class="font-bold text-lg text-gray-900 dark:text-white mb-1">{{ cert.course.title }}</h3>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Issued on {{ cert.issued_at|date:"F j, Y" }}</p>
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-xs text-gray-400 font-mono">{{ cert.certificate_id|truncatechars:12 }}</span>
+                                        {% if cert.file %}
+                                        <a href="{{ cert.file.url }}" download class="text-primary hover:text-blue-700 text-sm font-medium flex items-center">
+                                            <i class="fas fa-download mr-1"></i> Download
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-16 bg-white dark:bg-[#0F1623] rounded-xl border border-gray-200 dark:border-gray-800">
+                            <div class="w-20 h-20 bg-gray-50 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <i class="fas fa-award text-3xl text-gray-300 dark:text-gray-600"></i>
+                            </div>
+                            <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">No Certificates Yet</h3>
+                            <p class="text-gray-500 dark:text-gray-400 mb-6 max-w-md mx-auto">Complete courses to earn professional certificates and showcase your skills.</p>
+                            <a href="{% url 'course_list' %}" class="inline-block px-6 py-2 bg-primary text-white rounded-lg hover:bg-blue-700 transition-colors">Start Learning</a>
+                        </div>
+                    {% endif %}
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-in {
+        animation: fadeIn 0.3s ease-out forwards;
+    }
+</style>
+
+<script>
+    function switchTab(tabName) {
+        // Hide all views
+        document.getElementById('view-overview').classList.add('hidden');
+        document.getElementById('view-courses').classList.add('hidden');
+        document.getElementById('view-certificates').classList.add('hidden');
+        
+        // Show selected view
+        document.getElementById('view-' + tabName).classList.remove('hidden');
+        
+        // Reset all tabs styles
+        const tabs = ['overview', 'courses', 'certificates'];
+        tabs.forEach(t => {
+            const btn = document.getElementById('tab-' + t);
+            if(t === tabName) {
+                btn.className = "w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg bg-blue-50 dark:bg-blue-900/20 text-primary dark:text-blue-400 transition-colors";
+            } else {
+                btn.className = "w-full flex items-center px-4 py-3 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-lg transition-colors";
+            }
+        });
+    }
+</script>
+{% endblock %}

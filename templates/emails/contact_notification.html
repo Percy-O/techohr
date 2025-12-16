@@ -1,0 +1,24 @@
+{% extends 'emails/base_email.html' %}
+
+{% block title %}New Contact Message{% endblock %}
+
+{% block content %}
+<h2 style="color: #111827; margin-top: 0;">New Contact Message</h2>
+<p>Hello Admin,</p>
+<p>You have received a new message from the contact form on your website.</p>
+
+<div style="background-color: #f3f4f6; padding: 16px; border-radius: 6px; margin: 24px 0;">
+    <p style="margin: 0 0 8px 0;"><strong>Name:</strong> {{ name }}</p>
+    <p style="margin: 0 0 8px 0;"><strong>Email:</strong> <a href="mailto:{{ email }}" style="color: #0066FF;">{{ email }}</a></p>
+    <p style="margin: 0 0 8px 0;"><strong>Subject:</strong> {{ subject }}</p>
+    <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #e5e7eb;">
+        <strong>Message:</strong><br>
+        <p style="white-space: pre-wrap; margin-top: 8px;">{{ message }}</p>
+    </div>
+</div>
+
+<p>You can reply directly to this email or manage messages in the admin dashboard.</p>
+<center>
+    <a href="{{ dashboard_url }}" class="button">Go to Dashboard</a>
+</center>
+{% endblock %}

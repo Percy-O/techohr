@@ -1,0 +1,191 @@
+{% extends 'layouts/admin_base.html' %}
+
+{% block admin_content %}
+<script src="https://cdn.ckeditor.com/ckeditor5/40.2.0/classic/ckeditor.js"></script>
+<style>
+    .ck-editor__editable_inline {
+        min-height: 300px;
+    }
+    /* Dark mode support for CKEditor */
+    .dark .ck.ck-editor__main>.ck-editor__editable {
+        background: #1f2937; /* gray-800 */
+        color: #f3f4f6; /* gray-100 */
+    }
+    .dark .ck.ck-toolbar {
+        background: #374151; /* gray-700 */
+        border-color: #4b5563; /* gray-600 */
+    }
+    .dark .ck.ck-toolbar .ck-label {
+        color: #e5e7eb; /* gray-200 */
+    }
+    .dark .ck.ck-button {
+        color: #e5e7eb; /* gray-200 */
+    }
+    .dark .ck.ck-button:hover {
+        background: #4b5563; /* gray-600 */
+    }
+    .dark .ck.ck-button.ck-on {
+        background: #111827; /* gray-900 */
+        color: #ffffff;
+    }
+    .dark .ck.ck-editor__top .ck-sticky-panel .ck-toolbar {
+        border-color: #4b5563; /* gray-600 */
+    }
+</style>
+<div class="flex justify-between items-center mb-8">
+    <div>
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">{{ title }}</h1>
+        <p class="text-gray-500 dark:text-gray-400 mt-1">Module: <strong>{{ module.title }}</strong></p>
+    </div>
+    <a href="{% url 'manage_modules' module.course.id %}" class="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition">
+        <i class="fas fa-arrow-left mr-2"></i> Back to Modules
+    </a>
+</div>
+
+<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-8 max-w-3xl">
+    <form method="post" enctype="multipart/form-data" class="space-y-6">
+        {% csrf_token %}
+        
+        {% if form.non_field_errors %}
+        <div class="p-4 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg text-sm border border-red-200 dark:border-red-800">
+            {{ form.non_field_errors }}
+        </div>
+        {% endif %}
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="space-y-1">
+                <label class="block text-sm font-bold text-gray-700 dark:text-gray-300">Lesson Title</label>
+                {{ form.title }}
+                {% if form.title.errors %}<p class="text-red-500 text-xs mt-1">{{ form.title.errors.0 }}</p>{% endif %}
+            </div>
+            
+            <div class="space-y-1">
+                <label class="block text-sm font-bold text-gray-700 dark:text-gray-300">Lesson Type</label>
+                {{ form.lesson_type }}
+            </div>
+        </div>
+
+        <!-- Dynamic Fields -->
+        <div id="video_fields" class="space-y-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-800 hidden">
+            <h4 class="font-bold text-blue-800 dark:text-blue-300 text-sm flex items-center"><i class="fas fa-video mr-2"></i> Video Settings</h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="space-y-1">
+                    <label class="block text-xs font-bold text-gray-600 dark:text-gray-400">Video Upload</label>
+                    {{ form.video_file }}
+                    <p class="text-xs text-gray-500 dark:text-gray-500">Upload MP4, WebM (Max 500MB)</p>
+                </div>
+                <div class="space-y-1">
+                    <label class="block text-xs font-bold text-gray-600 dark:text-gray-400">Video URL</label>
+                    {{ form.video_url }}
+                    <p class="text-xs text-gray-500 dark:text-gray-500">YouTube or Vimeo Link (Alternative)</p>
+                </div>
+            </div>
+            <div class="space-y-1">
+                <label class="block text-xs font-bold text-gray-600 dark:text-gray-400">Duration</label>
+                {{ form.duration }}
+            </div>
+        </div>
+
+        <div id="document_fields" class="space-y-4 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-100 dark:border-green-800 hidden">
+            <h4 class="font-bold text-green-800 dark:text-green-300 text-sm flex items-center"><i class="fas fa-file-pdf mr-2"></i> Document Settings</h4>
+            <div class="space-y-1">
+                <label class="block text-xs font-bold text-gray-600 dark:text-gray-400">Upload File</label>
+                {{ form.document_file }}
+                <p class="text-xs text-gray-500 dark:text-gray-500">PDF, PPT, DOCX supported.</p>
+            </div>
+        </div>
+
+        <div id="text_fields" class="space-y-4 hidden">
+            <div class="space-y-1">
+                <label class="block text-sm font-bold text-gray-700 dark:text-gray-300">Content / Description</label>
+                {{ form.text_content }}
+                <p class="text-xs text-gray-500 dark:text-gray-500">Main content for articles or description for videos.</p>
+            </div>
+        </div>
+
+        <div id="assignment_fields" class="space-y-4 p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-100 dark:border-purple-800 hidden">
+            <h4 class="font-bold text-purple-800 dark:text-purple-300 text-sm flex items-center"><i class="fas fa-tasks mr-2"></i> Assignment Instructions</h4>
+            {{ form.assignment_instruction }}
+        </div>
+
+        <div class="flex items-center space-x-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+            <div class="flex items-center">
+                {{ form.is_free }}
+                <label class="ml-2 text-sm text-gray-700 dark:text-gray-300">Free Preview</label>
+            </div>
+            <div class="flex items-center ml-auto space-x-2">
+                <label class="text-sm text-gray-700 dark:text-gray-300">Order:</label>
+                {{ form.order }}
+            </div>
+        </div>
+
+        <div class="flex justify-end pt-4">
+            <button type="submit" class="px-6 py-2 bg-primary text-white font-bold rounded-lg hover:bg-blue-600 transition shadow-lg">Save Lesson</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    function toggleFields(type) {
+        // Hide all first
+        document.getElementById('video_fields').classList.add('hidden');
+        document.getElementById('document_fields').classList.add('hidden');
+        document.getElementById('text_fields').classList.add('hidden');
+        document.getElementById('assignment_fields').classList.add('hidden');
+
+        // Show relevant
+        if (type === 'video') {
+            document.getElementById('video_fields').classList.remove('hidden');
+            document.getElementById('text_fields').classList.remove('hidden');
+        } else if (type === 'document') {
+            document.getElementById('document_fields').classList.remove('hidden');
+            document.getElementById('text_fields').classList.remove('hidden');
+        } else if (type === 'article') {
+            document.getElementById('text_fields').classList.remove('hidden');
+        } else if (type === 'assignment') {
+            document.getElementById('assignment_fields').classList.remove('hidden');
+        } else if (type === 'quiz') {
+            // Placeholder for quiz logic
+        }
+    }
+
+    // Initial check
+    document.addEventListener('DOMContentLoaded', function() {
+        const typeSelect = document.querySelector('select[name="lesson_type"]');
+        if(typeSelect) {
+            toggleFields(typeSelect.value);
+            typeSelect.addEventListener('change', function() {
+                toggleFields(this.value);
+            });
+        }
+
+        // Initialize CKEditor
+        let editorInstance;
+        ClassicEditor
+            .create(document.querySelector('#id_text_content'), {
+                toolbar: ['heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', 'blockQuote', '|', 'undo', 'redo'],
+                heading: {
+                    options: [
+                        { model: 'paragraph', title: 'Paragraph', class: 'ck-heading_paragraph' },
+                        { model: 'heading1', view: 'h1', title: 'Heading 1', class: 'ck-heading_heading1' },
+                        { model: 'heading2', view: 'h2', title: 'Heading 2', class: 'ck-heading_heading2' },
+                        { model: 'heading3', view: 'h3', title: 'Heading 3', class: 'ck-heading_heading3' }
+                    ]
+                }
+            })
+            .then(editor => {
+                editorInstance = editor;
+                
+                // Sync data on form submit
+                const form = document.querySelector('form');
+                form.addEventListener('submit', () => {
+                     const data = editorInstance.getData();
+                     document.querySelector('#id_text_content').value = data;
+                });
+            })
+            .catch(error => {
+                console.error(error);
+            });
+    });
+</script>
+{% endblock %}

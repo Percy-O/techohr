@@ -1,0 +1,426 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="bg-gray-50 dark:bg-[#050B14] text-gray-900 dark:text-white py-12 transition-colors duration-300">
+    <div class="container mx-auto px-4">
+        <div class="flex flex-col lg:flex-row gap-8">
+            <div class="lg:w-2/3">
+                <h1 class="text-3xl lg:text-4xl font-bold mb-4">{{ course.title }}</h1>
+                <p class="text-lg text-gray-600 dark:text-gray-300 mb-6">{{ course.description|striptags|truncatewords:30 }}</p>
+                <div class="flex items-center space-x-4 mb-6 text-sm">
+                    <span class="flex items-center"><i class="fas fa-signal mr-2 text-primary"></i> {{ course.level }}</span>
+                    <!-- Placeholder duration could be calculated from lessons -->
+                    <span class="flex items-center"><i class="fas fa-clock mr-2 text-primary"></i> {{ course.modules.count }} Modules</span> 
+                    <span class="flex items-center"><i class="fas fa-user mr-2 text-primary"></i> {{ course.instructor.username }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="bg-gray-50 dark:bg-dark w-full transition-colors duration-300">
+    <div class="container mx-auto px-4 py-12">
+        <div class="flex flex-col lg:flex-row gap-8">
+        <!-- Main Content -->
+        <div class="lg:w-2/3">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-8 mb-8 border border-gray-200 dark:border-gray-700 transition-colors duration-300">
+                <h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">About This Course</h2>
+                <div class="prose dark:prose-invert max-w-none text-gray-700 dark:text-gray-300">
+                    {{ course.description|safe }}
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-8 border border-gray-200 dark:border-gray-700 transition-colors duration-300">
+                <h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Course Content</h2>
+                
+                <!-- Course Level Assessments -->
+                {% if course_assessments %}
+                    {% for assessment in course_assessments %}
+                        <div class="mb-4 border dark:border-gray-700 rounded-lg overflow-hidden transition-colors duration-300">
+                            <a href="{% if is_enrolled %}{% url 'submit_assessment' assessment.id %}{% else %}#{% endif %}" class="flex items-center px-6 py-4 bg-purple-50 dark:bg-purple-900/10 hover:bg-purple-100 dark:hover:bg-purple-900/20 transition {% if not is_enrolled %}cursor-not-allowed opacity-60{% endif %}">
+                                <div class="mr-4 text-purple-500 w-6 text-center">
+                                    {% if assessment.assessment_type == 'quiz' %}
+                                        <i class="fas fa-clipboard-check"></i>
+                                    {% else %}
+                                        <i class="fas fa-file-signature"></i>
+                                    {% endif %}
+                                </div>
+                                <span class="flex-grow font-semibold text-gray-900 dark:text-white">
+                                    {{ assessment.title }}
+                                    <span class="ml-2 text-xs bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 px-2 py-0.5 rounded uppercase">{{ assessment.assessment_type }}</span>
+                                </span>
+                                
+                                {% if is_enrolled %}
+                                    {% if assessment.user_submission %}
+                                        {% with submission=assessment.user_submission %}
+                                            {% if submission.score is not None %}
+                                                <span class="text-sm font-bold {% if submission.score >= assessment.passing_score %}text-green-600 dark:text-green-400{% else %}text-red-600 dark:text-red-400{% endif %}">
+                                                    {{ submission.score }}/{{ assessment.max_score }}
+                                                </span>
+                                            {% else %}
+                                                <span class="text-sm text-yellow-600 dark:text-yellow-400 font-medium">Pending Grade</span>
+                                            {% endif %}
+                                        {% endwith %}
+                                    {% else %}
+                                        <span class="text-sm text-gray-500 dark:text-gray-400">Not Started</span>
+                                    {% endif %}
+                                {% else %}
+                                    <i class="fas fa-lock text-gray-400 dark:text-gray-500"></i>
+                                {% endif %}
+                            </a>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                <div class="space-y-4">
+                    {% for module in modules %}
+                    <div class="border dark:border-gray-700 rounded-lg overflow-hidden transition-colors duration-300" x-data="{ open: {% if forloop.first %}true{% else %}false{% endif %} }">
+                        <button @click="open = !open" class="w-full px-6 py-4 bg-gray-50 dark:bg-gray-700 flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-600 transition focus:outline-none">
+                            <span class="font-semibold text-gray-900 dark:text-white">{{ module.title }}</span>
+                            <svg :class="{'rotate-180': open}" class="w-5 h-5 text-gray-500 dark:text-gray-400 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div x-show="open" class="bg-white dark:bg-gray-800 divide-y dark:divide-gray-700">
+                            {% for lesson in module.lessons.all %}
+                            <a href="{% if is_enrolled %}{% url 'lesson_detail' course.slug lesson.slug %}{% else %}#{% endif %}" class="flex items-center px-6 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition {% if not is_enrolled and not lesson.is_free %}cursor-not-allowed opacity-60{% endif %}">
+                                <div class="mr-4 text-gray-400 dark:text-gray-500 w-6 text-center">
+                                    {% if is_enrolled and lesson.id in completed_lesson_ids %}
+                                        <i class="fas fa-check-circle text-green-500"></i>
+                                    {% elif lesson.lesson_type == 'video' %}
+                                        <i class="fas fa-play-circle"></i>
+                                    {% elif lesson.lesson_type == 'article' %}
+                                        <i class="fas fa-file-alt"></i>
+                                    {% elif lesson.lesson_type == 'quiz' %}
+                                        <i class="fas fa-question-circle"></i>
+                                    {% elif lesson.lesson_type == 'assignment' %}
+                                        <i class="fas fa-clipboard-list"></i>
+                                    {% elif lesson.lesson_type == 'document' %}
+                                        <i class="fas fa-file-pdf"></i>
+                                    {% endif %}
+                                </div>
+                                <span class="flex-grow text-gray-700 dark:text-gray-300">{{ lesson.title }}</span>
+                                {% if not is_enrolled and not lesson.is_free %}
+                                <i class="fas fa-lock text-gray-400 dark:text-gray-500"></i>
+                                {% endif %}
+                                {% if lesson.is_free %}
+                                <span class="ml-2 text-xs bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 px-2 py-0.5 rounded">Preview</span>
+                                {% endif %}
+                                <span class="text-xs text-gray-400 dark:text-gray-500 ml-2">
+                                    {% if lesson.duration %}
+                                        {{ lesson.duration|date:"i:s" }}
+                                    {% endif %}
+                                </span>
+                            </a>
+                            {% endfor %}
+
+                            <!-- Module Assessments -->
+                            {% for assessment in module.prefetched_assessments %}
+                            <a href="{% if is_enrolled %}{% url 'submit_assessment' assessment.id %}{% else %}#{% endif %}" class="flex items-center px-6 py-3 bg-purple-50/30 dark:bg-purple-900/5 hover:bg-purple-50 dark:hover:bg-purple-900/10 transition {% if not is_enrolled %}cursor-not-allowed opacity-60{% endif %}">
+                                <div class="mr-4 text-purple-400 dark:text-purple-500 w-6 text-center">
+                                    {% if assessment.assessment_type == 'quiz' %}
+                                        <i class="fas fa-clipboard-check"></i>
+                                    {% else %}
+                                        <i class="fas fa-file-signature"></i>
+                                    {% endif %}
+                                </div>
+                                <span class="flex-grow text-gray-700 dark:text-gray-300">
+                                    {{ assessment.title }}
+                                    <span class="ml-2 text-xs bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 px-2 py-0.5 rounded uppercase">{{ assessment.assessment_type }}</span>
+                                </span>
+                                
+                                {% if is_enrolled %}
+                                    {% if assessment.user_submission %}
+                                        {% with submission=assessment.user_submission %}
+                                            {% if submission.score is not None %}
+                                                <span class="text-xs font-bold {% if submission.score >= assessment.passing_score %}text-green-600 dark:text-green-400{% else %}text-red-600 dark:text-red-400{% endif %}">
+                                                    {{ submission.score }}/{{ assessment.max_score }}
+                                                </span>
+                                            {% else %}
+                                                <span class="text-xs text-yellow-600 dark:text-yellow-400 font-medium">Pending</span>
+                                            {% endif %}
+                                        {% endwith %}
+                                    {% else %}
+                                        <span class="text-xs text-gray-400 dark:text-gray-500">Start</span>
+                                    {% endif %}
+                                {% else %}
+                                    <i class="fas fa-lock text-gray-400 dark:text-gray-500"></i>
+                                {% endif %}
+                            </a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-gray-500 dark:text-gray-400">No content added yet.</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Reviews Section -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-8 mt-8 border border-gray-200 dark:border-gray-700 transition-colors duration-300">
+                <div class="flex items-center justify-between mb-8">
+                    <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Student Reviews</h2>
+                    <div class="flex items-center space-x-1">
+                         <span class="text-yellow-400 text-lg"><i class="fas fa-star"></i></span>
+                         <span class="font-bold text-gray-800 dark:text-gray-200 text-lg">
+                            {% if reviews %}
+                                <!-- Calculate average logic would go here in view, but for now just show count -->
+                                {{ reviews.count }} Review{% if reviews.count > 1 %}s{% endif %}
+                            {% else %}
+                                0 Reviews
+                            {% endif %}
+                         </span>
+                    </div>
+                </div>
+                
+                <!-- Add Review Form -->
+                {% if is_enrolled and not user_review %}
+                <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-8 rounded-xl mb-10 shadow-sm transition-colors duration-300">
+                    <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-6">Write a Review</h3>
+                    <form action="{% url 'add_review' course.slug %}" method="post" id="review-form">
+                        {% csrf_token %}
+                        
+                        <div class="mb-6">
+                            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Select Rating</label>
+                            <!-- Hidden Select -->
+                            <div class="hidden">
+                                {{ review_form.rating }}
+                            </div>
+                            <!-- Star Rating UI -->
+                            <div class="flex space-x-1" id="star-rating">
+                                {% for i in "12345"|make_list %}
+                                <button type="button" data-value="{{ forloop.counter }}" class="star-btn p-1 focus:outline-none transition transform hover:scale-110">
+                                    <i class="fas fa-star text-3xl text-gray-200 dark:text-gray-600"></i>
+                                </button>
+                                {% endfor %}
+                            </div>
+                            <p id="rating-error" class="text-red-500 text-sm mt-2 hidden flex items-center">
+                                <i class="fas fa-exclamation-circle mr-1"></i> Please select a star rating.
+                            </p>
+                        </div>
+                        
+                        <div class="mb-6">
+                            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Your Feedback</label>
+                            <div class="dark-input-fix">
+                                {{ review_form.comment }}
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="w-full md:w-auto px-8 py-3 bg-primary text-white font-bold rounded-lg hover:bg-blue-700 transition shadow-md">
+                            Post Review
+                        </button>
+                    </form>
+                </div>
+                {% elif user_review %}
+                <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 p-6 rounded-xl mb-10 flex items-start transition-colors duration-300">
+                    <i class="fas fa-check-circle text-blue-500 dark:text-blue-400 text-xl mt-1 mr-3"></i>
+                    <div>
+                        <h4 class="font-bold text-blue-800 dark:text-blue-300">Thanks for your review!</h4>
+                        <p class="text-blue-600 dark:text-blue-400 text-sm mt-1">You rated this course {{ user_review.rating }} stars.</p>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Reviews List -->
+                <div class="space-y-8">
+                    {% for review in reviews %}
+                    <div class="flex items-start space-x-4 pb-8 border-b border-gray-100 dark:border-gray-700 last:border-0 last:pb-0 transition-colors duration-300">
+                        <!-- Avatar Placeholder -->
+                        <div class="flex-shrink-0">
+                            <div class="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-400 font-bold text-xl uppercase">
+                                {{ review.user.username|first }}
+                            </div>
+                        </div>
+                        
+                        <div class="flex-grow">
+                            <div class="flex items-center justify-between mb-1">
+                                <h4 class="font-bold text-gray-900 dark:text-white">{{ review.user.username }}</h4>
+                                <span class="text-xs text-gray-400 dark:text-gray-500">{{ review.created_at|date:"M d, Y" }}</span>
+                            </div>
+                            
+                            <div class="flex text-yellow-400 text-sm mb-3">
+                                {% for i in "12345"|make_list %}
+                                    {% if forloop.counter <= review.rating %}
+                                        <i class="fas fa-star"></i>
+                                    {% else %}
+                                        <i class="far fa-star text-gray-300 dark:text-gray-600"></i>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                            
+                            <div class="text-gray-600 dark:text-gray-300 leading-relaxed text-sm bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg rounded-tl-none transition-colors duration-300">
+                                {{ review.comment }}
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-10 bg-gray-50 dark:bg-gray-700/30 rounded-xl border border-dashed border-gray-200 dark:border-gray-700 transition-colors duration-300">
+                        <i class="far fa-comment-dots text-gray-400 dark:text-gray-500 text-4xl mb-3"></i>
+                        <p class="text-gray-500 dark:text-gray-400">No reviews yet. Be the first to share your thoughts!</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="lg:w-1/3">
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 sticky top-24 border border-gray-200 dark:border-gray-700 transition-colors duration-300">
+                {% if course.thumbnail %}
+                <img src="{{ course.thumbnail.url }}" alt="{{ course.title }}" class="w-full rounded-lg mb-6 shadow-sm">
+                {% endif %}
+                
+                {% if is_enrolled %}
+                    <div class="mb-6">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="font-bold text-gray-900 dark:text-white">Your Progress</span>
+                            <span class="text-sm font-semibold text-primary">{{ progress }}%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+                            <div class="bg-secondary h-2.5 rounded-full transition-all duration-500" style="width: {{ progress }}%"></div>
+                        </div>
+                    </div>
+                    
+                    {% if resume_lesson %}
+                    <a href="{% url 'lesson_detail' course.slug resume_lesson.slug %}" class="block w-full py-3 bg-primary text-white font-bold text-center rounded-md hover:bg-blue-600 transition mb-4">
+                        {% if progress > 0 %}Continue Learning{% else %}Start Learning{% endif %}
+                    </a>
+                    {% endif %}
+                    
+                    {% if progress == 100 %}
+                         {% if course.has_certificate %}
+                            <div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 mb-6 text-center transition-colors duration-300">
+                                <i class="fas fa-trophy text-yellow-500 text-4xl mb-2"></i>
+                                <h3 class="font-bold text-green-800 dark:text-green-300">Course Completed!</h3>
+                                <p class="text-sm text-green-600 dark:text-green-400 mb-3">You have earned a certificate.</p>
+                                {% if certificate %}
+                                <a href="{% url 'download_certificate' certificate.certificate_id %}" target="_blank" class="inline-block px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition text-sm font-semibold">
+                                    <i class="fas fa-download mr-1"></i> Download Certificate
+                                </a>
+                                {% endif %}
+                            </div>
+                         {% else %}
+                            <div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 mb-6 text-center transition-colors duration-300">
+                                <i class="fas fa-check-circle text-green-500 text-4xl mb-2"></i>
+                                <h3 class="font-bold text-green-800 dark:text-green-300">Course Completed!</h3>
+                            </div>
+                         {% endif %}
+                    {% else %}
+                        <a href="#" class="block w-full py-3 bg-secondary text-white font-bold text-center rounded-md hover:bg-green-600 transition mb-4">Continue Learning</a>
+                    {% endif %}
+
+                {% else %}
+                    <div class="text-3xl font-bold text-gray-900 dark:text-white mb-6 text-center">
+                        {% if course.price > 0 %}
+                            ${{ course.price }}
+                        {% else %}
+                            Free
+                        {% endif %}
+                    </div>
+                    <a href="{% url 'enroll_course' course.slug %}" class="block w-full py-3 bg-primary text-white font-bold text-center rounded-md hover:bg-blue-600 transition mb-4">Enroll Now</a>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 text-center mb-6">30-Day Money-Back Guarantee</p>
+                {% endif %}
+                
+                <div class="space-y-3 text-sm text-gray-600 dark:text-gray-400">
+                    <div class="flex items-center justify-between">
+                        <span><i class="fas fa-book-open mr-2 w-5"></i> Lessons</span>
+                        <span class="font-semibold text-gray-800 dark:text-gray-200">{{ course.modules.all|length }} Modules</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span><i class="fas fa-mobile-alt mr-2 w-5"></i> Access</span>
+                        <span class="font-semibold text-gray-800 dark:text-gray-200">Mobile & Desktop</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span><i class="fas fa-infinity mr-2 w-5"></i> Lifetime Access</span>
+                        <span class="font-semibold text-gray-800 dark:text-gray-200">Yes</span>
+                    </div>
+                     <div class="flex items-center justify-between">
+                        <span><i class="fas fa-certificate mr-2 w-5"></i> Certificate</span>
+                        <span class="font-semibold text-gray-800 dark:text-gray-200">{% if course.has_certificate %}Yes{% else %}No{% endif %}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const starBtns = document.querySelectorAll('.star-btn');
+        const ratingSelect = document.getElementById('id_rating'); // Use specific ID
+        const ratingError = document.getElementById('rating-error');
+        const form = document.getElementById('review-form');
+
+        // Dark mode sensitive classes for stars
+        const starActive = 'text-yellow-400';
+        const starInactiveLight = 'text-gray-200';
+        const starInactiveDark = 'text-gray-600'; // Custom class handling for dark mode inactive stars
+
+        if (starBtns.length > 0 && ratingSelect) {
+            let currentRating = 0;
+
+            // Handle Star Click
+            starBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const value = parseInt(this.getAttribute('data-value'));
+                    currentRating = value;
+                    ratingSelect.value = value;
+                    updateStars(value);
+                    ratingError.classList.add('hidden');
+                });
+                
+                // Optional: Hover effect handled by CSS, but could enhance here
+                btn.addEventListener('mouseenter', function() {
+                    const value = parseInt(this.getAttribute('data-value'));
+                    updateStars(value, true); // true = preview mode
+                });
+                
+                btn.addEventListener('mouseleave', function() {
+                    updateStars(currentRating, false);
+                });
+            });
+
+            function updateStars(value, isPreview = false) {
+                starBtns.forEach(btn => {
+                    const btnValue = parseInt(btn.getAttribute('data-value'));
+                    const icon = btn.querySelector('i');
+                    
+                    // Reset classes
+                    icon.classList.remove(starActive, starInactiveLight, 'dark:text-gray-600');
+                    // We need to handle dark mode classes manually or rely on CSS classes that exist on the element
+                    // Since we are replacing classes, we must be careful.
+                    // Easier way: just toggle 'text-yellow-400' and let the base classes handle the gray.
+                    // But we want gray when inactive.
+                    
+                    if (btnValue <= value) {
+                        icon.classList.add(starActive);
+                        icon.classList.remove('text-gray-200', 'dark:text-gray-600'); 
+                    } else {
+                        icon.classList.remove(starActive);
+                        icon.classList.add('text-gray-200', 'dark:text-gray-600');
+                    }
+                });
+            }
+            
+            // Form Validation
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    if (!currentRating || currentRating === 0) {
+                        e.preventDefault();
+                        ratingError.classList.remove('hidden');
+                        // Scroll to error
+                        ratingError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                });
+            }
+            
+            // Add custom style for dark mode inputs if not present
+            const textareas = form.querySelectorAll('textarea');
+            textareas.forEach(textarea => {
+                textarea.classList.add('w-full', 'p-3', 'border', 'border-gray-300', 'rounded-lg', 'focus:ring-2', 'focus:ring-primary', 'focus:border-transparent', 'dark:bg-gray-700', 'dark:border-gray-600', 'dark:text-white');
+            });
+        }
+    });
+</script>
+{% endblock %}

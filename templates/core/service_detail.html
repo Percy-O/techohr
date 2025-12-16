@@ -1,0 +1,181 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<!-- 1. Hero Section -->
+<section class="relative bg-dark pt-32 pb-32 overflow-hidden">
+    <div class="absolute inset-0 z-0">
+        <!-- Dynamic background image based on service type or generic tech background -->
+        <div class="absolute top-0 left-0 w-full h-full bg-cover bg-center" 
+             style="background-image: url('{% if service.image %}{{ service.image.url }}{% elif 'web' in service.slug %}https://images.unsplash.com/photo-1498050108023-c5249f4df085?ixlib=rb-1.2.1&auto=format&fit=crop&w=1352&q=80{% elif 'software' in service.slug %}https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80{% else %}https://images.unsplash.com/photo-1451187580459-43490279c0fa?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80{% endif %}');">
+        </div>
+        <!-- Heavy dark overlay (90% opacity as requested) -->
+        <div class="absolute inset-0 bg-dark/90"></div>
+    </div>
+
+    <div class="container mx-auto px-4 relative z-10">
+        <div class="max-w-4xl">
+            <a href="{% url 'service_list' %}" class="inline-flex items-center text-gray-400 hover:text-white mb-6 transition animate-fade-in-up">
+                <i class="fas fa-arrow-left mr-2"></i> Back to Services
+            </a>
+            <h1 class="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight animate-fade-in-up delay-100">
+                {{ service.title }}
+            </h1>
+            <p class="text-xl text-gray-300 max-w-2xl leading-relaxed animate-fade-in-up delay-200">
+                {{ service.short_description }}
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- 2. Main Content Layout -->
+<section class="py-20 bg-white dark:bg-[#0B0F19] animate-fade-in-up delay-300 transition-colors duration-300">
+    <div class="container mx-auto px-4">
+        <div class="flex flex-col lg:flex-row gap-12">
+            
+            <!-- Sidebar Navigation (Desktop) -->
+            <div class="lg:w-1/4">
+                <div class="bg-gray-50 dark:bg-[#111827] rounded-xl p-6 sticky top-24 border border-gray-100 dark:border-gray-800 transition-colors duration-300">
+                    <h3 class="font-bold text-dark dark:text-white text-lg mb-4">Our Services</h3>
+                    <nav class="space-y-2">
+                        <!-- We need a context processor or view update to get all services here, 
+                             but for now we can rely on standard navigation or hardcode common ones if needed. 
+                             Ideally, the view should pass 'all_services'. -->
+                        <a href="{% url 'service_list' %}" class="block px-4 py-3 rounded-lg text-sm font-medium transition {% if 'web' in service.slug %}bg-blue-50 dark:bg-blue-900/20 text-primary border-l-4 border-primary{% else %}text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800{% endif %}">
+                            All Solutions
+                        </a>
+                        <div class="h-px bg-gray-200 dark:bg-gray-700 my-2"></div>
+                        <a href="{% url 'contact' %}" class="block px-4 py-3 rounded-lg bg-dark dark:bg-black text-white text-center font-bold hover:bg-gray-800 dark:hover:bg-gray-900 transition shadow-lg mt-6">
+                            Get a Quote
+                        </a>
+                    </nav>
+
+                    <!-- Quick Contact Widget -->
+                    <div class="mt-8 bg-blue-600 rounded-xl p-6 text-white text-center relative overflow-hidden">
+                        <div class="absolute inset-0 bg-gradient-to-br from-blue-500 to-blue-700"></div>
+                        <div class="relative z-10">
+                            <i class="fas fa-headset text-4xl mb-4 opacity-80"></i>
+                            <h4 class="font-bold text-lg mb-2">Need Help?</h4>
+                            <p class="text-blue-100 text-sm mb-4">Speak with a tech expert today.</p>
+                            <a href="tel:+2347012345678" class="font-bold text-xl block hover:text-blue-200 transition">+234 701 234 5678</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content Area -->
+            <div class="lg:w-3/4">
+                <!-- Featured Image -->
+                <div class="rounded-2xl overflow-hidden shadow-lg mb-10 h-64 md:h-96 relative group">
+                    {% if service.image %}
+                        <img src="{{ service.image.url }}" alt="{{ service.title }}" class="w-full h-full object-cover transition duration-500 group-hover:scale-105">
+                    {% else %}
+                        <!-- Intelligent Fallback Images based on Service Type -->
+                        {% if 'web' in service.slug %}
+                            <img src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?ixlib=rb-1.2.1&auto=format&fit=crop&w=1352&q=80" alt="Web Development" class="w-full h-full object-cover transition duration-500 group-hover:scale-105">
+                        {% elif 'software' in service.slug or 'saas' in service.slug %}
+                            <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80" alt="Software Development" class="w-full h-full object-cover transition duration-500 group-hover:scale-105">
+                        {% elif 'data' in service.slug %}
+                            <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80" alt="Data Science" class="w-full h-full object-cover transition duration-500 group-hover:scale-105">
+                        {% elif 'ai' in service.slug or 'intelligence' in service.slug %}
+                            <img src="https://images.unsplash.com/photo-1620712943543-bcc4688e7485?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80" alt="AI" class="w-full h-full object-cover transition duration-500 group-hover:scale-105">
+                        {% elif 'ui' in service.slug or 'design' in service.slug %}
+                            <img src="https://images.unsplash.com/photo-1561070791-2526d30994b5?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80" alt="UI/UX Design" class="w-full h-full object-cover transition duration-500 group-hover:scale-105">
+                        {% elif 'mobile' in service.slug or 'app' in service.slug %}
+                            <img src="https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80" alt="Mobile Development" class="w-full h-full object-cover transition duration-500 group-hover:scale-105">
+                        {% elif 'api' in service.slug %}
+                            <img src="https://images.unsplash.com/photo-1558494949-ef2a27883e90?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80" alt="API Integration" class="w-full h-full object-cover transition duration-500 group-hover:scale-105">
+                        {% else %}
+                            <!-- Generic Tech Fallback -->
+                            <img src="https://images.unsplash.com/photo-1519389950473-47ba0277781c?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80" alt="Technology" class="w-full h-full object-cover transition duration-500 group-hover:scale-105">
+                        {% endif %}
+                        
+                        <!-- Overlay Gradient for Text Readability if we wanted to add text over it, but here adds depth -->
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
+                    {% endif %}
+                </div>
+
+                <!-- Detailed Content -->
+                <div class="prose prose-lg dark:prose-invert max-w-none text-gray-600 dark:text-gray-400 mb-12">
+                    <h2 class="text-3xl font-bold text-dark dark:text-white mb-6">Overview</h2>
+                    {{ service.content|linebreaks }}
+                </div>
+
+                <!-- Key Features Grid -->
+                {% if service.features %}
+                <div class="mb-12">
+                    <h2 class="text-3xl font-bold text-dark dark:text-white mb-8">Key Features</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {% for feature in service.features.splitlines %}
+                        <div class="flex items-start p-4 bg-gray-50 dark:bg-[#111827] rounded-xl border border-gray-100 dark:border-gray-800 hover:border-blue-200 dark:hover:border-blue-900 hover:shadow-md transition">
+                            <div class="flex-shrink-0 w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-primary mt-1">
+                                <i class="fas fa-check"></i>
+                            </div>
+                            <div class="ml-4">
+                                <h4 class="font-bold text-dark dark:text-white text-lg">{{ feature }}</h4>
+                                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Optimized for performance and scalability.</p> <!-- Generic description since features are just strings -->
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Technologies Used (If available in model) -->
+                {% if service.technologies %}
+                <div class="mb-12">
+                    <h2 class="text-3xl font-bold text-dark dark:text-white mb-6">Technologies We Use</h2>
+                    <div class="flex flex-wrap gap-3">
+                         {% for tech in service.technologies.splitlines %} <!-- Assuming simple list or comma separated -->
+                            <span class="px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg font-medium border border-gray-200 dark:border-gray-700">{{ tech }}</span>
+                         {% empty %}
+                            <!-- Fallback/Mockup if field is empty or format differs -->
+                            <span class="px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg font-medium border border-gray-200 dark:border-gray-700">Python</span>
+                            <span class="px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg font-medium border border-gray-200 dark:border-gray-700">Django</span>
+                            <span class="px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg font-medium border border-gray-200 dark:border-gray-700">React</span>
+                            <span class="px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg font-medium border border-gray-200 dark:border-gray-700">AWS</span>
+                         {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- FAQ Accordion (Generic for now, could be service specific) -->
+                <div class="bg-gray-50 dark:bg-[#111827] rounded-2xl p-8 border border-gray-100 dark:border-gray-800" x-data="{ selected: null }">
+                    <h3 class="text-2xl font-bold text-dark dark:text-white mb-6">Frequently Asked Questions</h3>
+                    <div class="space-y-4">
+                        <div class="bg-white dark:bg-[#1F2937] rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                            <button @click="selected !== 1 ? selected = 1 : selected = null" class="w-full px-6 py-4 text-left flex justify-between items-center font-bold text-dark dark:text-white focus:outline-none">
+                                <span>What is the estimated timeline?</span>
+                                <i class="fas" :class="selected === 1 ? 'fa-minus text-primary' : 'fa-plus text-gray-400'"></i>
+                            </button>
+                            <div x-show="selected === 1" class="px-6 pb-4 text-gray-600 dark:text-gray-400 text-sm">
+                                Timelines depend on the project scope. We usually deliver initial prototypes within 1-2 weeks.
+                            </div>
+                        </div>
+                        <div class="bg-white dark:bg-[#1F2937] rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                            <button @click="selected !== 2 ? selected = 2 : selected = null" class="w-full px-6 py-4 text-left flex justify-between items-center font-bold text-dark dark:text-white focus:outline-none">
+                                <span>Do you provide post-launch support?</span>
+                                <i class="fas" :class="selected === 2 ? 'fa-minus text-primary' : 'fa-plus text-gray-400'"></i>
+                            </button>
+                            <div x-show="selected === 2" class="px-6 pb-4 text-gray-600 dark:text-gray-400 text-sm">
+                                Yes, we offer comprehensive maintenance packages to ensure your solution remains secure and up-to-date.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 3. Bottom CTA -->
+<section class="py-20 bg-dark text-white text-center animate-fade-in-up">
+    <div class="container mx-auto px-4">
+        <h2 class="text-3xl md:text-4xl font-bold mb-6">Ready to start your {{ service.title }} project?</h2>
+        <p class="text-xl text-gray-400 mb-8 max-w-2xl mx-auto">Get in touch with us today for a free consultation and quote.</p>
+        <a href="{% url 'contact' %}" class="inline-flex items-center px-8 py-4 bg-primary text-white font-bold rounded-lg hover:bg-blue-600 transition shadow-lg shadow-blue-500/30">
+            Contact Us Now <i class="fas fa-arrow-right ml-2"></i>
+        </a>
+    </div>
+</section>
+{% endblock %}

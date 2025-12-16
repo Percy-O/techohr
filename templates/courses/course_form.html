@@ -1,0 +1,303 @@
+{% extends 'layouts/admin_base.html' %}
+
+{% block admin_content %}
+<script src="https://cdn.ckeditor.com/ckeditor5/40.2.0/classic/ckeditor.js"></script>
+<style>
+    .ck-editor__editable_inline {
+        min-height: 300px;
+    }
+    /* Dark mode support for CKEditor */
+    .dark .ck.ck-editor__main>.ck-editor__editable {
+        background: #1f2937; /* gray-800 */
+        color: #f3f4f6; /* gray-100 */
+    }
+    .dark .ck.ck-toolbar {
+        background: #374151; /* gray-700 */
+        border-color: #4b5563; /* gray-600 */
+    }
+    .dark .ck.ck-toolbar .ck-label {
+        color: #e5e7eb; /* gray-200 */
+    }
+    .dark .ck.ck-button {
+        color: #e5e7eb; /* gray-200 */
+    }
+    .dark .ck.ck-button:hover {
+        background: #4b5563; /* gray-600 */
+    }
+    .dark .ck.ck-button.ck-on {
+        background: #111827; /* gray-900 */
+        color: #ffffff;
+    }
+    .dark .ck.ck-editor__top .ck-sticky-panel .ck-toolbar {
+        border-color: #4b5563; /* gray-600 */
+    }
+</style>
+<div class="w-full max-w-7xl mx-auto">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900 dark:text-white">{{ title }}</h1>
+            <p class="text-gray-500 dark:text-gray-400 mt-1">Fill in the details to create a new course.</p>
+        </div>
+        <a href="{% url 'manage_courses' %}" class="flex items-center text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition">
+            <i class="fas fa-arrow-left mr-2"></i> Back to Courses
+        </a>
+    </div>
+
+    <!-- Stepper -->
+    <div class="mb-8" x-data="{ step: 1 }">
+        <div class="flex items-center justify-between w-full max-w-3xl mx-auto relative">
+            <div class="absolute left-0 top-1/2 transform -translate-y-1/2 w-full h-1 bg-gray-200 dark:bg-gray-700 -z-10 rounded-full"></div>
+            
+            <!-- Step 1 -->
+            <a href="#basic-info" @click="step = 1" class="flex flex-col items-center bg-gray-50 dark:bg-gray-900 px-2 group">
+                <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-white transition-colors duration-300" 
+                     :class="step >= 1 ? 'bg-primary' : 'bg-gray-300 dark:bg-gray-600'">
+                    1
+                </div>
+                <span class="text-xs font-medium mt-2 transition-colors duration-300"
+                      :class="step >= 1 ? 'text-primary' : 'text-gray-500 dark:text-gray-400'">Basic Info</span>
+            </a>
+
+            <!-- Step 2 -->
+            <a href="#course-settings" @click="step = 2" class="flex flex-col items-center bg-gray-50 dark:bg-gray-900 px-2 group">
+                <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-white transition-colors duration-300" 
+                     :class="step >= 2 ? 'bg-primary' : 'bg-gray-300 dark:bg-gray-600'">
+                    2
+                </div>
+                <span class="text-xs font-medium mt-2 transition-colors duration-300"
+                      :class="step >= 2 ? 'text-primary' : 'text-gray-500 dark:text-gray-400'">Settings</span>
+            </a>
+
+            <!-- Step 3 -->
+            <a href="#media" @click="step = 3" class="flex flex-col items-center bg-gray-50 dark:bg-gray-900 px-2 group">
+                <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-white transition-colors duration-300" 
+                     :class="step >= 3 ? 'bg-primary' : 'bg-gray-300 dark:bg-gray-600'">
+                    3
+                </div>
+                <span class="text-xs font-medium mt-2 transition-colors duration-300"
+                      :class="step >= 3 ? 'text-primary' : 'text-gray-500 dark:text-gray-400'">Media</span>
+            </a>
+
+            <!-- Step 4 -->
+            <a href="#publishing" @click="step = 4" class="flex flex-col items-center bg-gray-50 dark:bg-gray-900 px-2 group">
+                <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-white transition-colors duration-300" 
+                     :class="step >= 4 ? 'bg-primary' : 'bg-gray-300 dark:bg-gray-600'">
+                    4
+                </div>
+                <span class="text-xs font-medium mt-2 transition-colors duration-300"
+                      :class="step >= 4 ? 'text-primary' : 'text-gray-500 dark:text-gray-400'">Publishing</span>
+            </a>
+        </div>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" id="courseForm" x-data="{ submitting: false }" @submit="submitting = true">
+        {% csrf_token %}
+        
+        {% if form.non_field_errors %}
+        <div class="p-4 mb-6 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg text-sm border border-red-200 dark:border-red-800">
+            <div class="flex items-center">
+                <i class="fas fa-exclamation-circle mr-2"></i>
+                <div>{{ form.non_field_errors }}</div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Left Column: Main Content -->
+            <div class="lg:col-span-2 space-y-8">
+                
+                <!-- Basic Information Card -->
+                <div id="basic-info" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden scroll-mt-24">
+                    <div class="p-6 border-b border-gray-100 dark:border-gray-700">
+                        <h2 class="text-lg font-bold text-gray-900 dark:text-white flex items-center">
+                            <i class="fas fa-info-circle text-primary mr-2"></i> Basic Information
+                        </h2>
+                    </div>
+                    <div class="p-6 space-y-6">
+                        <!-- Title -->
+                        <div class="space-y-2">
+                            <label for="{{ form.title.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Course Title <span class="text-red-500">*</span>
+                            </label>
+                            {{ form.title }}
+                            {% if form.title.errors %}
+                            <p class="text-red-500 text-xs mt-1">{{ form.title.errors.0 }}</p>
+                            {% endif %}
+                            <p class="text-xs text-gray-500 dark:text-gray-400">A catchy title for your course.</p>
+                        </div>
+
+                        <!-- Description -->
+                        <div class="space-y-2">
+                            <label for="{{ form.description.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Description <span class="text-red-500">*</span>
+                            </label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                            <p class="text-red-500 text-xs mt-1">{{ form.description.errors.0 }}</p>
+                            {% endif %}
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Detailed overview of what students will learn.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Course Settings Card -->
+                <div id="course-settings" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden scroll-mt-24">
+                    <div class="p-6 border-b border-gray-100 dark:border-gray-700">
+                        <h2 class="text-lg font-bold text-gray-900 dark:text-white flex items-center">
+                            <i class="fas fa-sliders-h text-primary mr-2"></i> Course Settings
+                        </h2>
+                    </div>
+                    <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Category -->
+                        <div class="space-y-2">
+                            <label for="{{ form.category.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Category
+                            </label>
+                            {{ form.category }}
+                        </div>
+
+                        <!-- Level -->
+                        <div class="space-y-2">
+                            <label for="{{ form.level.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Difficulty Level
+                            </label>
+                            {{ form.level }}
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Right Column: Sidebar -->
+            <div class="space-y-8">
+                
+                <!-- Publishing Card -->
+                <div id="publishing" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden scroll-mt-24">
+                    <div class="p-6 border-b border-gray-100 dark:border-gray-700">
+                        <h2 class="text-lg font-bold text-gray-900 dark:text-white flex items-center">
+                            <i class="fas fa-globe text-primary mr-2"></i> Publishing
+                        </h2>
+                    </div>
+                    <div class="p-6 space-y-6">
+                        <!-- Price -->
+                        <div class="space-y-2">
+                            <label for="{{ form.price.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Price ($)
+                            </label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <span class="text-gray-500 dark:text-gray-400">$</span>
+                                </div>
+                                {{ form.price }}
+                            </div>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Set to 0 for free courses.</p>
+                        </div>
+
+                        <!-- Options -->
+                        <div class="space-y-4 pt-2">
+                            <div class="flex items-start">
+                                <div class="flex items-center h-5">
+                                    {{ form.is_published }}
+                                </div>
+                                <div class="ml-3 text-sm">
+                                    <label for="{{ form.is_published.id_for_label }}" class="font-medium text-gray-700 dark:text-gray-300">Publish Immediately</label>
+                                    <p class="text-gray-500 dark:text-gray-400 text-xs">Make this course visible to students.</p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-start">
+                                <div class="flex items-center h-5">
+                                    {{ form.has_certificate }}
+                                </div>
+                                <div class="ml-3 text-sm">
+                                    <label for="{{ form.has_certificate.id_for_label }}" class="font-medium text-gray-700 dark:text-gray-300">Enable Certificate</label>
+                                    <p class="text-gray-500 dark:text-gray-400 text-xs">Award certificate upon completion.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-6 bg-gray-50 dark:bg-gray-700/50 border-t border-gray-100 dark:border-gray-700">
+                        <button type="submit" :disabled="submitting" class="w-full py-3 bg-primary text-white font-bold rounded-lg hover:bg-blue-600 transition shadow-lg shadow-blue-500/30 flex justify-center items-center disabled:opacity-70 disabled:cursor-not-allowed">
+                            <i class="fas fa-spinner fa-spin mr-2" x-show="submitting"></i>
+                            <span x-show="!submitting"><i class="fas fa-save mr-2"></i> Save Course</span>
+                            <span x-show="submitting">Saving...</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Media Card -->
+                <div id="media" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden scroll-mt-24">
+                    <div class="p-6 border-b border-gray-100 dark:border-gray-700">
+                        <h2 class="text-lg font-bold text-gray-900 dark:text-white flex items-center">
+                            <i class="fas fa-image text-primary mr-2"></i> Media
+                        </h2>
+                    </div>
+                    <div class="p-6">
+                        <div class="space-y-2">
+                            <label for="{{ form.thumbnail.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Course Thumbnail
+                            </label>
+                            
+                            <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-lg hover:border-primary dark:hover:border-primary transition group">
+                                <div class="space-y-1 text-center">
+                                    <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 dark:text-gray-500 group-hover:text-primary transition mb-3"></i>
+                                    <div class="flex text-sm text-gray-600 dark:text-gray-400 justify-center">
+                                        <label for="{{ form.thumbnail.id_for_label }}" class="relative cursor-pointer bg-white dark:bg-gray-800 rounded-md font-medium text-primary hover:text-blue-500 focus-within:outline-none">
+                                            <span>Upload a file</span>
+                                            <span class="sr-only">Upload a file</span>
+                                        </label>
+                                    </div>
+                                    <p class="text-xs text-gray-500 dark:text-gray-500">PNG, JPG, GIF up to 10MB</p>
+                                    <!-- Hide default input slightly but keep accessible/functional -->
+                                    <div class="opacity-50 text-xs mt-2 overflow-hidden w-full">
+                                        {{ form.thumbnail }}
+                                    </div>
+                                </div>
+                            </div>
+                            {% if form.instance.thumbnail %}
+                            <div class="mt-4">
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">Current Thumbnail:</p>
+                                <img src="{{ form.instance.thumbnail.url }}" alt="Current Thumbnail" class="w-full h-auto rounded-lg border border-gray-200 dark:border-gray-700">
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        let editorInstance;
+        ClassicEditor
+            .create(document.querySelector('#id_description'), {
+                toolbar: ['heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', 'blockQuote', '|', 'undo', 'redo'],
+                heading: {
+                    options: [
+                        { model: 'paragraph', title: 'Paragraph', class: 'ck-heading_paragraph' },
+                        { model: 'heading1', view: 'h1', title: 'Heading 1', class: 'ck-heading_heading1' },
+                        { model: 'heading2', view: 'h2', title: 'Heading 2', class: 'ck-heading_heading2' },
+                        { model: 'heading3', view: 'h3', title: 'Heading 3', class: 'ck-heading_heading3' }
+                    ]
+                }
+            })
+            .then(editor => {
+                editorInstance = editor;
+                
+                // Sync data on form submit (optional as CKEditor 5 usually handles this)
+                const form = document.getElementById('courseForm');
+                form.addEventListener('submit', () => {
+                     const data = editorInstance.getData();
+                     document.querySelector('#id_description').value = data;
+                });
+            })
+            .catch(error => {
+                console.error(error);
+            });
+    });
+</script>
+{% endblock %}

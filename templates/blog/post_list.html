@@ -1,0 +1,260 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="relative bg-white dark:bg-[#050B14] pt-32 pb-20 overflow-hidden transition-colors duration-300">
+    <!-- Background Effects -->
+    <div class="absolute inset-0 z-0">
+        <div class="absolute top-0 left-0 w-full h-full bg-[url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80')] bg-cover bg-center opacity-10 dark:opacity-20 transition-opacity duration-300"></div>
+        <div class="absolute inset-0 bg-gradient-to-b from-white via-white/90 to-white dark:from-[#050B14] dark:via-[#050B14]/90 dark:to-[#050B14] transition-colors duration-300"></div>
+    </div>
+
+    <div class="container mx-auto px-4 relative z-10 text-center">
+        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-blue-500/20 bg-blue-500/5 backdrop-blur-sm mb-6">
+            <span class="relative flex h-2 w-2">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+            </span>
+            <span class="text-blue-600 dark:text-blue-400 text-xs font-bold tracking-widest uppercase transition-colors duration-300">TechOhr Blog</span>
+        </div>
+        <h1 class="text-4xl md:text-6xl font-bold text-gray-900 dark:text-white mb-6 leading-tight transition-colors duration-300">
+            Latest <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-blue-800 dark:from-blue-400 dark:to-blue-600">Tech Insights</span>
+        </h1>
+        <p class="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto transition-colors duration-300">
+            Explore the latest trends, tutorials, and industry news curated by our experts.
+        </p>
+    </div>
+</section>
+
+<!-- Main Content -->
+<section class="py-16 bg-gray-50 dark:bg-[#050B14] min-h-screen transition-colors duration-300">
+    <div class="container mx-auto px-4">
+        <div class="flex flex-col lg:flex-row gap-12">
+            
+            <!-- Left Column: Content -->
+            <div class="lg:w-2/3">
+                
+                <!-- Search & Filters (Mobile Only) -->
+                <div class="lg:hidden mb-8">
+                    <form action="{% url 'post_list' %}" method="get" class="relative">
+                        <input type="text" name="q" value="{{ search_query|default:'' }}" placeholder="Search articles..." class="w-full pl-12 pr-4 py-3 bg-white dark:bg-[#0F1623] border border-gray-200 dark:border-gray-800 rounded-xl text-gray-900 dark:text-gray-300 placeholder-gray-500 dark:placeholder-gray-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition transition-colors duration-300">
+                        <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 transition-colors duration-300"></i>
+                    </form>
+                </div>
+
+                <!-- Section Title -->
+                <div class="flex items-center justify-between mb-8">
+                    <h2 class="text-2xl font-bold text-gray-900 dark:text-white transition-colors duration-300">
+                        {% if search_query %}
+                            Search Results: "{{ search_query }}"
+                        {% elif current_category %}
+                            Category: {{ current_category.name }}
+                        {% elif current_author %}
+                            Author: {{ current_author.username }}
+                        {% else %}
+                            Recent Articles
+                        {% endif %}
+                    </h2>
+                    {% if posts %}
+                    <span class="text-sm text-gray-500">{{ posts.count }} Posts</span>
+                    {% endif %}
+                </div>
+
+                <!-- Posts Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {% for post in posts %}
+                    <article class="bg-white dark:bg-[#0F1623] rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-800 hover:border-blue-500/30 hover:shadow-2xl hover:shadow-blue-900/10 transition-all duration-300 group flex flex-col h-full">
+                        <!-- Image -->
+                        <div class="relative h-48 overflow-hidden">
+                            <a href="{% url 'post_detail' post.slug %}" class="block h-full">
+                                {% if post.image %}
+                                <img src="{{ post.image.url }}" alt="{{ post.title }}" class="w-full h-full object-cover transform group-hover:scale-110 transition duration-700">
+                                {% else %}
+                                <div class="w-full h-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                                    <i class="fas fa-newspaper text-gray-400 dark:text-gray-600 text-4xl"></i>
+                                </div>
+                                {% endif %}
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-60"></div>
+                            </a>
+                            {% if post.category %}
+                            <div class="absolute top-4 left-4">
+                                <a href="{% url 'category_detail' post.category.slug %}" class="px-3 py-1 bg-blue-600/90 backdrop-blur-sm text-white text-xs font-bold rounded-full shadow-lg hover:bg-blue-500 transition border border-blue-400/20">
+                                    {{ post.category.name }}
+                                </a>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Content -->
+                        <div class="p-6 flex flex-col flex-grow">
+                            <div class="flex items-center text-xs text-gray-500 dark:text-gray-500 mb-4 space-x-3 transition-colors duration-300">
+                                <span class="flex items-center"><i class="far fa-calendar-alt mr-1.5 text-blue-600 dark:text-blue-500"></i> {{ post.published_at|date:"M d, Y" }}</span>
+                                <span class="text-gray-300 dark:text-gray-700">|</span>
+                                <span class="flex items-center"><i class="far fa-user mr-1.5 text-blue-600 dark:text-blue-500"></i> {{ post.author.username }}</span>
+                            </div>
+                            
+                            <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-3 leading-snug group-hover:text-blue-600 dark:group-hover:text-blue-400 transition line-clamp-2 transition-colors duration-300">
+                                <a href="{% url 'post_detail' post.slug %}">{{ post.title }}</a>
+                            </h3>
+                            
+                            <p class="text-gray-600 dark:text-gray-400 text-sm line-clamp-3 mb-6 flex-grow transition-colors duration-300">
+                                {{ post.content|striptags|truncatewords:20 }}
+                            </p>
+                            
+                            <div class="mt-auto pt-4 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between transition-colors duration-300">
+                                <a href="{% url 'post_detail' post.slug %}" class="text-blue-600 dark:text-blue-400 font-bold text-sm hover:text-blue-500 dark:hover:text-blue-300 transition flex items-center group/link">
+                                    Read More <i class="fas fa-arrow-right ml-2 transform group-hover/link:translate-x-1 transition-transform"></i>
+                                </a>
+                                <div class="flex items-center space-x-3 text-gray-400 dark:text-gray-500 text-sm transition-colors duration-300">
+                                    <span><i class="far fa-eye mr-1"></i> {{ post.views|default:"0" }}</span>
+                                    <span><i class="far fa-comment mr-1"></i> {{ post.comments.count }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+                    {% empty %}
+                    <div class="col-span-1 md:col-span-2 text-center py-16 bg-white dark:bg-[#0F1623] rounded-2xl border border-dashed border-gray-200 dark:border-gray-800 transition-colors duration-300">
+                        <div class="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400 dark:text-gray-600 text-2xl transition-colors duration-300">
+                            <i class="fas fa-search"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2 transition-colors duration-300">No articles found</h3>
+                        <p class="text-gray-500 mb-6">Try adjusting your search or filter to find what you're looking for.</p>
+                        <a href="{% url 'post_list' %}" class="inline-flex items-center px-6 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-500 transition">
+                            Clear Filters
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Pagination -->
+                {% if posts.has_other_pages %}
+                <div class="mt-16 flex justify-center">
+                    <nav class="flex space-x-2">
+                        {% if posts.has_previous %}
+                        <a href="?page={{ posts.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}" class="w-10 h-10 rounded-lg bg-white dark:bg-[#0F1623] border border-gray-200 dark:border-gray-800 flex items-center justify-center text-gray-400 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition transition-colors duration-300">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                        {% endif %}
+                        
+                        {% for i in posts.paginator.page_range %}
+                            {% if posts.number == i %}
+                            <span class="w-10 h-10 rounded-lg bg-blue-600 text-white font-bold flex items-center justify-center shadow-lg shadow-blue-900/30">{{ i }}</span>
+                            {% else %}
+                            <a href="?page={{ i }}{% if search_query %}&q={{ search_query }}{% endif %}" class="w-10 h-10 rounded-lg bg-white dark:bg-[#0F1623] border border-gray-200 dark:border-gray-800 flex items-center justify-center text-gray-400 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition transition-colors duration-300">{{ i }}</a>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if posts.has_next %}
+                        <a href="?page={{ posts.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}" class="w-10 h-10 rounded-lg bg-white dark:bg-[#0F1623] border border-gray-200 dark:border-gray-800 flex items-center justify-center text-gray-400 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition transition-colors duration-300">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                        {% endif %}
+                    </nav>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Right Column: Sidebar (Hidden on mobile, visible on lg) -->
+            <div class="lg:w-1/3 space-y-8">
+                
+                <!-- Search Widget (Desktop) -->
+                <div class="hidden lg:block bg-white dark:bg-[#0F1623] rounded-2xl border border-gray-200 dark:border-gray-800 p-6 transition-colors duration-300">
+                    <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center transition-colors duration-300">
+                        <span class="w-1 h-6 bg-blue-500 rounded mr-3"></span> Search
+                    </h3>
+                    <form action="{% url 'post_list' %}" method="get" class="relative">
+                        <input type="text" name="q" value="{{ search_query|default:'' }}" placeholder="Type keywords..." class="w-full px-4 py-3 bg-gray-50 dark:bg-[#050B14] border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-300 focus:outline-none focus:border-blue-500 transition transition-colors duration-300">
+                        <button type="submit" class="absolute right-3 top-3 text-gray-400 dark:text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 transition transition-colors duration-300">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Categories Widget -->
+                <div class="bg-white dark:bg-[#0F1623] rounded-2xl border border-gray-200 dark:border-gray-800 p-6 transition-colors duration-300">
+                    <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center transition-colors duration-300">
+                        <span class="w-1 h-6 bg-blue-500 rounded mr-3"></span> Categories
+                    </h3>
+                    <ul class="space-y-2">
+                        {% for cat in categories %}
+                        <li>
+                            <a href="{% url 'category_detail' cat.slug %}" class="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-[#050B14] group transition border border-transparent hover:border-gray-200 dark:hover:border-gray-800 transition-colors duration-300">
+                                <span class="text-gray-600 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition flex items-center transition-colors duration-300">
+                                    <i class="fas fa-folder text-gray-400 dark:text-gray-600 mr-3 group-hover:text-blue-500 transition text-sm transition-colors duration-300"></i>
+                                    {{ cat.name }}
+                                </span>
+                                <span class="text-xs bg-gray-100 dark:bg-[#050B14] text-gray-500 px-2 py-1 rounded-full group-hover:bg-blue-100 dark:group-hover:bg-blue-500/10 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition transition-colors duration-300">{{ cat.post_set.count }}</span>
+                            </a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+
+                <!-- Recent Posts Widget -->
+                <div class="bg-white dark:bg-[#0F1623] rounded-2xl border border-gray-200 dark:border-gray-800 p-6 transition-colors duration-300">
+                    <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-6 flex items-center transition-colors duration-300">
+                        <span class="w-1 h-6 bg-blue-500 rounded mr-3"></span> Recent Posts
+                    </h3>
+                    <div class="space-y-6">
+                        {% for r_post in recent_posts %}
+                        <div class="flex gap-4 group">
+                            <a href="{% url 'post_detail' r_post.slug %}" class="flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden relative border border-gray-200 dark:border-gray-700 transition-colors duration-300">
+                                {% if r_post.image %}
+                                <img src="{{ r_post.image.url }}" alt="{{ r_post.title }}" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+                                {% else %}
+                                <div class="w-full h-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-400 dark:text-gray-500">
+                                    <i class="fas fa-image"></i>
+                                </div>
+                                {% endif %}
+                            </a>
+                            <div>
+                                <h4 class="text-sm font-bold text-gray-900 dark:text-gray-200 leading-snug mb-1 transition-colors duration-300">
+                                    <a href="{% url 'post_detail' r_post.slug %}" class="group-hover:text-blue-600 dark:group-hover:text-blue-400 transition line-clamp-2">{{ r_post.title }}</a>
+                                </h4>
+                                <span class="text-xs text-gray-500">{{ r_post.published_at|date:"M d, Y" }}</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Tags Widget -->
+                {% if tags %}
+                <div class="bg-white dark:bg-[#0F1623] rounded-2xl border border-gray-200 dark:border-gray-800 p-6 transition-colors duration-300">
+                    <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-6 flex items-center transition-colors duration-300">
+                        <span class="w-1 h-6 bg-blue-500 rounded mr-3"></span> Popular Tags
+                    </h3>
+                    <div class="flex flex-wrap gap-2">
+                        {% for tag in tags %}
+                        <a href="#" class="px-3 py-1.5 bg-gray-50 dark:bg-[#050B14] border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 text-xs font-medium rounded-lg hover:bg-blue-600 hover:text-white hover:border-blue-600 dark:hover:border-blue-600 transition transition-colors duration-300">
+                            #{{ tag.name }}
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Newsletter Widget -->
+                <div class="bg-blue-600 dark:bg-gradient-to-br dark:from-blue-900 dark:to-[#0F1623] rounded-2xl border border-blue-500/30 dark:border-blue-800/30 p-8 text-center relative overflow-hidden group transition-colors duration-300">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 dark:bg-blue-500/20 rounded-full -mr-16 -mt-16 blur-2xl transition-transform group-hover:scale-150 duration-700"></div>
+                    
+                    <div class="relative z-10">
+                        <div class="w-14 h-14 bg-white/20 dark:bg-blue-500/20 rounded-xl flex items-center justify-center mx-auto mb-4 text-white dark:text-blue-400 text-2xl border border-white/20 dark:border-blue-500/30">
+                            <i class="far fa-paper-plane"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-2">Subscribe Now</h3>
+                        <p class="text-blue-100 dark:text-blue-200/60 text-sm mb-6">Get the latest updates and tech insights delivered to your inbox.</p>
+                        
+                        <form action="{% url 'subscribe' %}" method="post" class="space-y-3">
+                            {% csrf_token %}
+                            <input type="email" name="email" placeholder="Your email address" required class="w-full px-4 py-3 bg-white/10 dark:bg-[#050B14]/50 border border-white/20 dark:border-blue-500/30 rounded-lg text-white placeholder-blue-100/50 dark:placeholder-blue-300/30 focus:outline-none focus:border-white dark:focus:border-blue-400 focus:bg-white/20 dark:focus:bg-[#050B14] transition text-sm text-center">
+                            <button type="submit" class="w-full py-3 bg-white text-blue-600 dark:bg-blue-600 dark:text-white font-bold rounded-lg hover:bg-gray-100 dark:hover:bg-blue-500 transition shadow-lg shadow-black/20 dark:shadow-blue-900/30 text-sm uppercase tracking-wide">Subscribe</button>
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

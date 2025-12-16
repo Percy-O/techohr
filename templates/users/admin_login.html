@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+
+{% block navbar %}{% endblock %}
+{% block footer %}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">
+    <div class="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 rounded-2xl overflow-hidden shadow-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-800">
+        
+        <!-- Left Side: Admin Branding -->
+        <div class="hidden md:flex flex-col justify-center items-center bg-gray-900 text-white p-12 relative overflow-hidden">
+            <!-- Abstract Background shapes -->
+            <div class="absolute top-0 left-0 w-full h-full opacity-10">
+                 <div class="absolute top-10 left-10 w-32 h-32 rounded-full bg-primary blur-3xl"></div>
+                 <div class="absolute bottom-10 right-10 w-40 h-40 rounded-full bg-purple-500 blur-3xl"></div>
+            </div>
+
+            <div class="relative z-10 text-center">
+                <div class="w-20 h-20 bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-6 backdrop-blur-sm border border-white/20 shadow-xl">
+                    <i class="fas fa-user-shield text-4xl text-primary"></i>
+                </div>
+                <h2 class="text-3xl font-bold mb-2">Admin Portal</h2>
+                <p class="text-gray-400">Secure access for administrators only.</p>
+            </div>
+            
+            <div class="mt-12 text-sm text-gray-500">
+                &copy; {% now "Y" %} TechOhr. All rights reserved.
+            </div>
+        </div>
+
+        <!-- Right Side: Login Form -->
+        <div class="p-8 md:p-12 flex flex-col justify-center relative">
+             <div class="mb-8 text-center md:text-left">
+                <a href="{% url 'home' %}" class="inline-flex items-center text-sm text-gray-500 hover:text-primary mb-6 transition">
+                    <i class="fas fa-arrow-left mr-2"></i> Back to Home
+                </a>
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Welcome Back</h2>
+                <p class="text-gray-500 dark:text-gray-400 mt-1">Please enter your credentials to continue.</p>
+            </div>
+
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+                
+                {% if form.errors %}
+                <div class="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-4 rounded-lg text-sm flex items-start animate-fade-in">
+                    <i class="fas fa-exclamation-circle mt-0.5 mr-2 flex-shrink-0"></i>
+                    <div>
+                        <p class="font-bold">Login Failed</p>
+                        <ul class="list-disc list-inside mt-1">
+                            {% for field in form %}
+                                {% for error in field.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            {% endfor %}
+                            {% for error in form.non_field_errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Username</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+                            <i class="fas fa-user"></i>
+                        </span>
+                        <input type="text" name="username" required class="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white transition" placeholder="Enter username">
+                    </div>
+                </div>
+
+                <div>
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Password</label>
+                    </div>
+                    <div class="relative" x-data="{ show: false }">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+                            <i class="fas fa-lock"></i>
+                        </span>
+                        <input :type="show ? 'text' : 'password'" name="password" required class="w-full pl-10 pr-10 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white transition" placeholder="••••••••">
+                        <button type="button" @click="show = !show" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition">
+                            <i class="fas" :class="show ? 'fa-eye-slash' : 'fa-eye'"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full bg-primary text-white font-bold py-3 rounded-lg hover:bg-blue-600 transition transform hover:-translate-y-0.5 shadow-lg shadow-blue-500/30">
+                    Sign In to Dashboard
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

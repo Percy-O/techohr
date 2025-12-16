@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<!-- If user is staff, wrap in admin layout style, else keep standard -->
+<!-- However, since 'extends' must be first, we can't conditionally extend. 
+     We will check user status and render appropriate wrapper or just style it neutrally but robustly. 
+     Alternatively, we can use an include or layout check in the view, but here we'll stick to a clean responsive design that fits both.
+     Ideally, if user is staff, we might want the sidebar. 
+     Let's check if we can include the admin sidebar if staff.
+-->
+
+{% if user.is_staff %}
+    {% include 'partials/admin_topbar.html' %}
+    <div class="flex min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
+        <!-- Sidebar for Desktop -->
+        <aside class="hidden md:block w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex-shrink-0">
+            <div class="p-6">
+                <a href="{% url 'home' %}" class="flex items-center space-x-2">
+                    <span class="text-2xl font-bold tracking-wider text-gray-800 dark:text-white">TECH</span>
+                    <span class="text-primary text-2xl"><i class="fas fa-bolt"></i></span>
+                    <span class="text-2xl font-bold tracking-wider text-gray-800 dark:text-white">OHR</span>
+                </a>
+            </div>
+            <nav class="mt-6 px-4 space-y-2">
+                <a href="{% url 'admin_dashboard' %}" class="flex items-center px-4 py-3 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition font-medium">
+                    <i class="fas fa-tachometer-alt w-6"></i> Dashboard
+                </a>
+                <a href="{% url 'manage_projects' %}" class="flex items-center px-4 py-3 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition font-medium">
+                    <i class="fas fa-project-diagram w-6"></i> Projects
+                </a>
+                <a href="{% url 'manage_testimonials' %}" class="flex items-center px-4 py-3 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition font-medium">
+                    <i class="fas fa-comment-alt w-6"></i> Testimonials
+                </a>
+                <a href="{% url 'manage_messages' %}" class="flex items-center px-4 py-3 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition font-medium">
+                    <i class="fas fa-envelope w-6"></i> Messages
+                </a>
+                <a href="{% url 'manage_users' %}" class="flex items-center px-4 py-3 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition font-medium">
+                    <i class="fas fa-users w-6"></i> Users
+                </a>
+                <div class="border-t border-gray-200 dark:border-gray-700 my-2 pt-2">
+                    <a href="{% url 'profile' %}" class="flex items-center px-4 py-3 bg-blue-50 dark:bg-blue-900/20 text-primary dark:text-blue-400 rounded-lg transition font-medium">
+                        <i class="fas fa-user-circle w-6"></i> Profile
+                    </a>
+                    <a href="{% url 'logout' %}" class="flex items-center px-4 py-3 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition font-medium">
+                        <i class="fas fa-sign-out-alt w-6"></i> Logout
+                    </a>
+                </div>
+            </nav>
+        </aside>
+        
+        <div class="flex-1 flex flex-col w-full max-w-7xl mx-auto md:px-8 py-8">
+{% else %}
+    <!-- Normal Layout Wrapper -->
+    <div class="py-16 bg-gray-50 dark:bg-gray-900 min-h-screen transition-colors duration-300">
+    <div class="container mx-auto px-4">
+{% endif %}
+
+        <div class="max-w-2xl mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 overflow-hidden">
+            <div class="bg-primary px-8 py-6 text-white flex justify-between items-center">
+                <h1 class="text-2xl font-bold">Edit Profile</h1>
+                {% if user.is_staff %}
+                    <a href="{% url 'admin_dashboard' %}" class="text-blue-100 hover:text-white text-sm"><i class="fas fa-arrow-left mr-1"></i> Back to Dashboard</a>
+                {% else %}
+                    <a href="{% url 'dashboard' %}" class="text-blue-100 hover:text-white text-sm"><i class="fas fa-arrow-left mr-1"></i> Back to Dashboard</a>
+                {% endif %}
+            </div>
+            
+            <form method="post" enctype="multipart/form-data" class="p-8">
+                {% csrf_token %}
+                
+                {% if form.non_field_errors %}
+                <div class="mb-6 p-4 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg text-sm">
+                    {{ form.non_field_errors }}
+                </div>
+                {% endif %}
+
+                <!-- Profile Picture -->
+                <div class="mb-8 flex flex-col items-center">
+                    <div class="relative group">
+                        {% if user.profile_picture %}
+                        <img src="{{ user.profile_picture.url }}" alt="{{ user.username }}" class="w-32 h-32 rounded-full object-cover border-4 border-gray-100 dark:border-gray-700 shadow-md">
+                        {% else %}
+                        <div class="w-32 h-32 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center text-4xl font-bold text-gray-400 dark:text-gray-500 border-4 border-gray-100 dark:border-gray-700 shadow-md">
+                            {{ user.username|first|upper }}
+                        </div>
+                        {% endif %}
+                        <div class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full opacity-0 group-hover:opacity-100 transition duration-300 cursor-pointer">
+                            <i class="fas fa-camera text-white text-2xl"></i>
+                        </div>
+                    </div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">Click below to upload new photo</p>
+                    <div class="mt-2 w-full max-w-xs text-center text-gray-500 dark:text-gray-400">
+                        {{ form.profile_picture }}
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div class="space-y-2">
+                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300">Username</label>
+                        {{ form.username }}
+                        {% if form.username.errors %}
+                        <p class="text-red-500 dark:text-red-400 text-xs mt-1">{{ form.username.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300">Email Address</label>
+                        {{ form.email }}
+                        {% if form.email.errors %}
+                        <p class="text-red-500 dark:text-red-400 text-xs mt-1">{{ form.email.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div class="space-y-2">
+                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300">First Name</label>
+                        {{ form.first_name }}
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300">Last Name</label>
+                        {{ form.last_name }}
+                    </div>
+                </div>
+
+                <div class="mb-8 space-y-2">
+                    <label class="block text-sm font-bold text-gray-700 dark:text-gray-300">Bio</label>
+                    {{ form.bio }}
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Tell us a little bit about yourself.</p>
+                </div>
+
+                <div class="flex justify-end">
+                    <button type="submit" class="px-8 py-3 bg-primary text-white font-bold rounded-lg hover:bg-blue-600 transition shadow-lg shadow-blue-500/30">
+                        Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+
+{% if user.is_staff %}
+        </div>
+    </div>
+{% else %}
+    </div>
+    </div>
+{% endif %}
+
+{% endblock %}

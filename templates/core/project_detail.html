@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<!-- 1. Hero Section -->
+<section class="relative bg-white dark:bg-dark pt-32 pb-20 overflow-hidden transition-colors duration-300">
+    <div class="absolute inset-0 z-0">
+        <!-- Background Image -->
+        <div class="absolute inset-0 bg-cover bg-center opacity-10 dark:opacity-20" 
+             style="background-image: url('{% if project.image %}{{ project.image.url }}{% else %}https://images.unsplash.com/photo-1498050108023-c5249f4df085?ixlib=rb-1.2.1&auto=format&fit=crop&w=2000&q=80{% endif %}');">
+        </div>
+        <!-- Gradient Overlay -->
+        <div class="absolute inset-0 bg-gradient-to-b from-white/90 via-white/80 to-white dark:from-dark/95 dark:via-dark/90 dark:to-dark"></div>
+    </div>
+
+    <div class="container mx-auto px-4 relative z-10">
+        <div class="max-w-4xl mx-auto text-center">
+            <a href="{% url 'portfolio' %}" class="inline-flex items-center text-gray-500 hover:text-primary mb-6 transition animate-fade-in-up">
+                <i class="fas fa-arrow-left mr-2"></i> Back to Portfolio
+            </a>
+            <h1 class="text-4xl md:text-6xl font-bold text-gray-900 dark:text-white mb-6 leading-tight animate-fade-in-up delay-100 transition-colors duration-300">
+                {{ project.title }}
+            </h1>
+            {% if project.client %}
+            <p class="text-xl text-primary font-medium mb-4 animate-fade-in-up delay-200">
+                Client: {{ project.client }}
+            </p>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<!-- 2. Main Content -->
+<section class="py-12 bg-white dark:bg-[#0B0F19] transition-colors duration-300 animate-fade-in-up delay-300">
+    <div class="container mx-auto px-4">
+        <div class="flex flex-col lg:flex-row gap-12">
+            
+            <!-- Main Project Image & Content -->
+            <div class="lg:w-2/3">
+                <!-- Featured Image -->
+                <div class="rounded-2xl overflow-hidden shadow-xl mb-10 border border-gray-100 dark:border-gray-800 group relative">
+                    {% if project.image %}
+                        <img src="{{ project.image.url }}" alt="{{ project.title }}" class="w-full h-auto object-cover">
+                    {% else %}
+                        <div class="w-full h-96 bg-gray-200 dark:bg-gray-800 flex items-center justify-center">
+                            <i class="fas fa-image text-6xl text-gray-400"></i>
+                        </div>
+                    {% endif %}
+                    
+                    <!-- Overlay with Visit Button -->
+                    {% if project.url %}
+                    <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                        <a href="{{ project.url }}" target="_blank" class="px-8 py-3 bg-white text-gray-900 font-bold rounded-full hover:bg-primary hover:text-white transition transform translate-y-4 group-hover:translate-y-0 duration-300">
+                            Visit Live Site <i class="fas fa-external-link-alt ml-2"></i>
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Description -->
+                <div class="prose prose-lg dark:prose-invert max-w-none text-gray-600 dark:text-gray-400 mb-12">
+                    <h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-6">About the Project</h2>
+                    <p class="whitespace-pre-line">{{ project.description }}</p>
+                </div>
+            </div>
+
+            <!-- Sidebar Info -->
+            <div class="lg:w-1/3">
+                <div class="bg-gray-50 dark:bg-[#111827] rounded-xl p-8 sticky top-24 border border-gray-200 dark:border-gray-800 transition-colors duration-300">
+                    <h3 class="font-bold text-gray-900 dark:text-white text-xl mb-6">Project Details</h3>
+                    
+                    <div class="space-y-6">
+                        {% if project.client %}
+                        <div>
+                            <h4 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Client</h4>
+                            <p class="text-gray-900 dark:text-white font-medium">{{ project.client }}</p>
+                        </div>
+                        {% endif %}
+
+                        <div>
+                            <h4 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Date</h4>
+                            <p class="text-gray-900 dark:text-white font-medium">{{ project.created_at|date:"F Y" }}</p>
+                        </div>
+
+                        <div>
+                            <h4 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Technologies</h4>
+                            <div class="flex flex-wrap gap-2">
+                                {% if project.technologies %}
+                                    {% for tech in project.technologies.split|slice:":10" %} 
+                                        <!-- Assuming simple split by space if comma not present, or handle manually. 
+                                             Better to assume the model stores comma separated or just display raw string if needed, 
+                                             but let's try to split by comma if possible in template or just show raw. -->
+                                        <!-- Let's just display the string or try to smart split -->
+                                        <span class="px-3 py-1 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-sm rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
+                                            {{ tech|cut:"," }}
+                                        </span>
+                                    {% endfor %}
+                                {% else %}
+                                    <span class="text-gray-500 italic">Not specified</span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        {% if project.url %}
+                        <div class="pt-6 border-t border-gray-200 dark:border-gray-700">
+                            <a href="{{ project.url }}" target="_blank" class="block w-full py-4 bg-primary text-white text-center font-bold rounded-lg hover:bg-blue-700 transition shadow-lg shadow-blue-500/30">
+                                Visit Live Website <i class="fas fa-external-link-alt ml-2"></i>
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Call to Action Widget -->
+                <div class="mt-8 bg-gray-900 dark:bg-black rounded-xl p-8 text-center border border-gray-800 relative overflow-hidden group">
+                    <div class="absolute inset-0 bg-blue-600/10 group-hover:bg-blue-600/20 transition duration-500"></div>
+                    <div class="relative z-10">
+                        <h3 class="font-bold text-white text-lg mb-2">Need something similar?</h3>
+                        <p class="text-gray-400 text-sm mb-6">Let's build your next big idea together.</p>
+                        <a href="{% url 'contact' %}" class="inline-block px-6 py-2 border border-white/20 text-white rounded-lg hover:bg-white hover:text-black transition font-semibold">
+                            Get a Quote
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<!-- 3. Related Projects (Optional - Just showing others) -->
+<section class="py-20 bg-gray-50 dark:bg-dark border-t border-gray-200 dark:border-gray-800 transition-colors duration-300">
+    <div class="container mx-auto px-4">
+        <h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-12 text-center">Other Projects</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <!-- We would ideally fetch related projects here, but for now we rely on user navigation -->
+            <!-- Placeholder content or maybe we can't easily fetch 3 random projects without a custom tag or passing them in view. 
+                 Let's skip actual dynamic related projects for now to keep view simple, or add a simple CTA to portfolio. -->
+            <div class="col-span-3 text-center">
+                 <a href="{% url 'portfolio' %}" class="text-primary font-semibold hover:underline text-lg">View Full Portfolio &rarr;</a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

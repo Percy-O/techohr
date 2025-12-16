@@ -1,0 +1,356 @@
+{% extends 'layouts/admin_base.html' %}
+
+{% block admin_content %}
+<div class="w-full">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- Welcome Section -->
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+    <div>
+        <h1 class="text-3xl font-bold text-gray-800 dark:text-white">Dashboard</h1>
+        <p class="text-gray-500 dark:text-gray-400 mt-1">Overview of your system's performance.</p>
+    </div>
+    <div class="flex space-x-3">
+        <select class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 text-sm rounded-lg focus:ring-primary focus:border-primary block p-2.5 shadow-sm">
+            <option>Last 7 Days</option>
+            <option>Last 30 Days</option>
+            <option>This Year</option>
+        </select>
+        <button class="bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-600 transition shadow-lg shadow-blue-500/30 flex items-center">
+            <i class="fas fa-download mr-2"></i> Export Report
+        </button>
+    </div>
+</div>
+
+<!-- Stats Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <!-- Card 1 -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 flex items-center hover:shadow-md dark:hover:shadow-gray-700/30 transition">
+        <div class="w-12 h-12 rounded-full bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-primary dark:text-blue-300 mr-4">
+            <i class="fas fa-users text-xl"></i>
+        </div>
+        <div>
+            <div class="text-gray-500 dark:text-gray-400 text-xs font-bold uppercase tracking-wider mb-1">Total Users</div>
+            <div class="text-2xl font-bold text-gray-800 dark:text-white">{{ total_users }}</div>
+            <div class="text-xs text-green-500 font-medium mt-1"><i class="fas fa-arrow-up mr-1"></i> 12% increase</div>
+        </div>
+    </div>
+    
+    <!-- Card 2 -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 flex items-center hover:shadow-md dark:hover:shadow-gray-700/30 transition">
+        <div class="w-12 h-12 rounded-full bg-purple-50 dark:bg-purple-900/30 flex items-center justify-center text-purple-600 dark:text-purple-300 mr-4">
+            <i class="fas fa-project-diagram text-xl"></i>
+        </div>
+        <div>
+            <div class="text-gray-500 dark:text-gray-400 text-xs font-bold uppercase tracking-wider mb-1">Projects</div>
+            <div class="text-2xl font-bold text-gray-800 dark:text-white">{{ total_projects }}</div>
+            <div class="text-xs text-green-500 font-medium mt-1"><i class="fas fa-arrow-up mr-1"></i> 3 new this week</div>
+        </div>
+    </div>
+    
+    <!-- Card 3 -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 flex items-center hover:shadow-md dark:hover:shadow-gray-700/30 transition">
+        <div class="w-12 h-12 rounded-full bg-yellow-50 dark:bg-yellow-900/30 flex items-center justify-center text-yellow-600 dark:text-yellow-300 mr-4">
+            <i class="fas fa-graduation-cap text-xl"></i>
+        </div>
+        <div>
+            <div class="text-gray-500 dark:text-gray-400 text-xs font-bold uppercase tracking-wider mb-1">Courses</div>
+            <div class="text-2xl font-bold text-gray-800 dark:text-white">{{ total_courses }}</div>
+            <div class="text-xs text-gray-400 font-medium mt-1">Stable</div>
+        </div>
+    </div>
+    
+    <!-- Card 4 -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 flex items-center hover:shadow-md dark:hover:shadow-gray-700/30 transition">
+        <div class="w-12 h-12 rounded-full bg-pink-50 dark:bg-pink-900/30 flex items-center justify-center text-pink-600 dark:text-pink-300 mr-4">
+            <i class="fas fa-newspaper text-xl"></i>
+        </div>
+        <div>
+            <div class="text-gray-500 dark:text-gray-400 text-xs font-bold uppercase tracking-wider mb-1">Blog Posts</div>
+            <div class="text-2xl font-bold text-gray-800 dark:text-white">{{ total_posts }}</div>
+            <div class="text-xs text-green-500 font-medium mt-1"><i class="fas fa-arrow-up mr-1"></i> 5 new drafts</div>
+        </div>
+    </div>
+</div>
+
+<!-- LMS Stats Grid -->
+<h2 class="text-xl font-bold text-gray-800 dark:text-white mb-4">LMS Overview</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+    <!-- Enrollments -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 flex items-center hover:shadow-md dark:hover:shadow-gray-700/30 transition">
+        <div class="w-12 h-12 rounded-full bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-300 mr-4">
+            <i class="fas fa-user-graduate text-xl"></i>
+        </div>
+        <div>
+            <div class="text-gray-500 dark:text-gray-400 text-xs font-bold uppercase tracking-wider mb-1">Total Enrollments</div>
+            <div class="text-2xl font-bold text-gray-800 dark:text-white">{{ total_enrollments }}</div>
+        </div>
+    </div>
+
+    <!-- Certificates -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 flex items-center hover:shadow-md dark:hover:shadow-gray-700/30 transition">
+        <div class="w-12 h-12 rounded-full bg-green-50 dark:bg-green-900/30 flex items-center justify-center text-green-600 dark:text-green-300 mr-4">
+            <i class="fas fa-certificate text-xl"></i>
+        </div>
+        <div>
+            <div class="text-gray-500 dark:text-gray-400 text-xs font-bold uppercase tracking-wider mb-1">Certificates Issued</div>
+            <div class="text-2xl font-bold text-gray-800 dark:text-white">{{ total_certificates }}</div>
+        </div>
+    </div>
+
+    <!-- Active Courses -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 flex items-center hover:shadow-md dark:hover:shadow-gray-700/30 transition">
+        <div class="w-12 h-12 rounded-full bg-orange-50 dark:bg-orange-900/30 flex items-center justify-center text-orange-600 dark:text-orange-300 mr-4">
+            <i class="fas fa-book-reader text-xl"></i>
+        </div>
+        <div>
+            <div class="text-gray-500 dark:text-gray-400 text-xs font-bold uppercase tracking-wider mb-1">Active Courses</div>
+            <div class="text-2xl font-bold text-gray-800 dark:text-white">{{ total_courses }}</div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Section -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+    <!-- Main Chart -->
+    <div class="lg:col-span-2 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-lg font-bold text-gray-800 dark:text-white">Visitor Trends</h3>
+            <button class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"><i class="fas fa-ellipsis-h"></i></button>
+        </div>
+        <div class="h-80 w-full">
+            <canvas id="visitorChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Doughnut Chart -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-lg font-bold text-gray-800 dark:text-white">Content Distribution</h3>
+            <button class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"><i class="fas fa-ellipsis-h"></i></button>
+        </div>
+        <div class="h-64 w-full flex justify-center">
+            <canvas id="contentChart"></canvas>
+        </div>
+        <div class="mt-6 space-y-3">
+            <div class="flex justify-between items-center text-sm">
+                <div class="flex items-center text-gray-600 dark:text-gray-300"><span class="w-3 h-3 rounded-full bg-blue-500 mr-2"></span> Posts</div>
+                <span class="font-bold text-gray-700 dark:text-gray-200">{{ total_posts }}</span>
+            </div>
+            <div class="flex justify-between items-center text-sm">
+                <div class="flex items-center text-gray-600 dark:text-gray-300"><span class="w-3 h-3 rounded-full bg-purple-500 mr-2"></span> Projects</div>
+                <span class="font-bold text-gray-700 dark:text-gray-200">{{ total_projects }}</span>
+            </div>
+            <div class="flex justify-between items-center text-sm">
+                <div class="flex items-center text-gray-600 dark:text-gray-300"><span class="w-3 h-3 rounded-full bg-yellow-500 mr-2"></span> Courses</div>
+                <span class="font-bold text-gray-700 dark:text-gray-200">{{ total_courses }}</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity Tables -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+    <!-- Recent Enrollments -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+        <div class="p-6 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
+            <h3 class="text-lg font-bold text-gray-800 dark:text-white">Recent Enrollments</h3>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm text-left">
+                <thead class="text-xs text-gray-500 dark:text-gray-400 uppercase bg-gray-50 dark:bg-gray-700/50">
+                    <tr>
+                        <th class="px-6 py-3">Student</th>
+                        <th class="px-6 py-3">Course</th>
+                        <th class="px-6 py-3">Date</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                    {% for enrollment in recent_enrollments %}
+                    <tr class="bg-white dark:bg-gray-800 border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                        <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">
+                            {{ enrollment.student.username }}
+                        </td>
+                        <td class="px-6 py-4 text-gray-500 dark:text-gray-400">
+                            {{ enrollment.course.title|truncatechars:20 }}
+                        </td>
+                        <td class="px-6 py-4 text-gray-500 dark:text-gray-400">
+                            {{ enrollment.enrolled_at|date:"M d" }}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">No enrollments yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Recent Users -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+        <div class="p-6 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
+            <h3 class="text-lg font-bold text-gray-800 dark:text-white">New Users</h3>
+            <a href="{% url 'manage_users' %}" class="text-sm text-primary font-medium hover:underline">View All</a>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm text-left">
+                <thead class="text-xs text-gray-500 dark:text-gray-400 uppercase bg-gray-50 dark:bg-gray-700/50">
+                    <tr>
+                        <th class="px-6 py-3">User</th>
+                        <th class="px-6 py-3">Role</th>
+                        <th class="px-6 py-3">Date</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                    {% for user in recent_users %}
+                    <tr class="bg-white dark:bg-gray-800 border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                        <td class="px-6 py-4 font-medium text-gray-900 dark:text-white flex items-center">
+                            <div class="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-xs font-bold mr-3 text-gray-600 dark:text-gray-300">
+                                {{ user.username|first|upper }}
+                            </div>
+                            {{ user.username }}
+                        </td>
+                        <td class="px-6 py-4 text-gray-500 dark:text-gray-400">
+                            {% if user.is_staff %}Admin{% else %}User{% endif %}
+                        </td>
+                        <td class="px-6 py-4 text-gray-500 dark:text-gray-400">
+                            {{ user.date_joined|date:"M d" }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Recent Messages -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+        <div class="p-6 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
+            <h3 class="text-lg font-bold text-gray-800 dark:text-white">Recent Messages</h3>
+            <a href="{% url 'manage_messages' %}" class="text-sm text-primary font-medium hover:underline">View All</a>
+        </div>
+        <div class="divide-y divide-gray-100 dark:divide-gray-700">
+            {% for contact in recent_contacts %}
+            <div class="p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition flex items-start space-x-4">
+                <div class="flex-shrink-0 w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 text-primary dark:text-blue-300 flex items-center justify-center">
+                    <i class="fas fa-envelope"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-gray-900 dark:text-white truncate">
+                        {{ contact.name }}
+                    </p>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 truncate">
+                        {{ contact.subject }}
+                    </p>
+                </div>
+                <div class="inline-flex items-center text-xs text-gray-400 dark:text-gray-500">
+                    {{ contact.created_at|timesince }} ago
+                </div>
+            </div>
+            {% empty %}
+            <div class="p-6 text-center text-gray-500 dark:text-gray-400 text-sm">No messages yet.</div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Recent Subscribers -->
+<div class="mt-8 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+    <div class="p-6 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
+        <h3 class="text-lg font-bold text-gray-800 dark:text-white">Recent Newsletter Subscribers</h3>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm text-left">
+            <thead class="text-xs text-gray-500 dark:text-gray-400 uppercase bg-gray-50 dark:bg-gray-700/50">
+                <tr>
+                    <th class="px-6 py-3">Email</th>
+                    <th class="px-6 py-3">Subscribed Date</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                {% for subscriber in recent_subscribers %}
+                <tr class="bg-white dark:bg-gray-800 border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                    <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">
+                        {{ subscriber.email }}
+                    </td>
+                    <td class="px-6 py-4 text-gray-500 dark:text-gray-400">
+                        {{ subscriber.subscribed_at|date:"M d, Y" }}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="2" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">No subscribers yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    // Theme-aware chart colors
+    const isDark = document.documentElement.classList.contains('dark');
+    const gridColor = isDark ? '#374151' : '#E5E7EB';
+    const textColor = isDark ? '#9CA3AF' : '#4B5563';
+
+    // Visitor Chart
+    const ctx = document.getElementById('visitorChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+            datasets: [{
+                label: 'Unique Visitors',
+                data: [120, 190, 300, 250, 200, 350, 400],
+                borderColor: '#0066FF',
+                backgroundColor: 'rgba(0, 102, 255, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: { 
+                    beginAtZero: true, 
+                    grid: { color: gridColor, borderDash: [2, 4] },
+                    ticks: { color: textColor }
+                },
+                x: { 
+                    grid: { display: false },
+                    ticks: { color: textColor }
+                }
+            }
+        }
+    });
+
+    // Content Chart
+    const ctx2 = document.getElementById('contentChart').getContext('2d');
+    new Chart(ctx2, {
+        type: 'doughnut',
+        data: {
+            labels: ['Posts', 'Projects', 'Courses'],
+            datasets: [{
+                data: [{{ total_posts }}, {{ total_projects }}, {{ total_courses }}],
+                backgroundColor: ['#3B82F6', '#A855F7', '#EAB308'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            cutout: '70%'
+        }
+    });
+</script>
+</div>
+{% endblock %}

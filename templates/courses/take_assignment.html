@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-12 max-w-4xl">
+    <div class="mb-8">
+        <a href="{% url 'course_detail' assessment.course.slug %}" class="text-blue-600 dark:text-blue-400 hover:underline mb-4 inline-block">
+            <i class="fas fa-arrow-left mr-2"></i> Back to Course
+        </a>
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">{{ assessment.title }}</h1>
+        <div class="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
+            <span><i class="fas fa-file-alt mr-1"></i> Assignment</span>
+            <span><i class="fas fa-star mr-1"></i> {{ assessment.max_score }} Points</span>
+            {% if assessment.due_date %}
+            <span><i class="fas fa-clock mr-1"></i> Due: {{ assessment.due_date|date:"M d, Y" }}</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-8 mb-8">
+        <h3 class="font-bold text-lg text-gray-900 dark:text-white mb-4">Instructions</h3>
+        <div class="prose dark:prose-invert max-w-none text-gray-600 dark:text-gray-300">
+            {{ assessment.description|linebreaks }}
+        </div>
+    </div>
+
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-8">
+        <h3 class="font-bold text-lg text-gray-900 dark:text-white mb-6">Your Submission</h3>
+        <form method="post" enctype="multipart/form-data" class="space-y-6">
+            {% csrf_token %}
+            
+            <div class="space-y-2">
+                <label class="block text-sm font-bold text-gray-700 dark:text-gray-300">Text Response</label>
+                {{ form.text_content }}
+            </div>
+
+            <div class="space-y-2">
+                <label class="block text-sm font-bold text-gray-700 dark:text-gray-300">Upload File (Optional)</label>
+                {{ form.file }}
+                <p class="text-xs text-gray-500 dark:text-gray-400">Supported formats: PDF, DOCX, ZIP.</p>
+            </div>
+
+            <div class="pt-4 border-t border-gray-100 dark:border-gray-700 flex justify-end">
+                <button type="submit" class="px-8 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition shadow-lg">
+                    Submit Assignment
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

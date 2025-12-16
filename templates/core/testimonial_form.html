@@ -1,0 +1,120 @@
+{% extends 'layouts/admin_base.html' %}
+
+{% block admin_content %}
+<div class="w-full">
+    <div class="flex justify-between items-center mb-8">
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">{{ title }}</h1>
+        <a href="{% url 'manage_testimonials' %}" class="text-gray-500 dark:text-gray-400 hover:text-dark dark:hover:text-white transition">
+            <i class="fas fa-arrow-left mr-2"></i> Back to Testimonials
+        </a>
+    </div>
+
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5 sm:p-8">
+        <form method="post" enctype="multipart/form-data" class="space-y-6">
+            {% csrf_token %}
+            
+            {% if form.non_field_errors %}
+            <div class="p-4 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg text-sm">
+                {{ form.non_field_errors }}
+            </div>
+            {% endif %}
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="space-y-2">
+                    <label for="{{ form.client_name.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Client Name</label>
+                    {{ form.client_name }}
+                    {% if form.client_name.errors %}
+                    <p class="text-red-500 text-xs mt-1">{{ form.client_name.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div class="space-y-2">
+                    <label for="{{ form.rating.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Rating (1-5)</label>
+                    {{ form.rating }}
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="space-y-2">
+                    <label for="{{ form.position.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Position</label>
+                    {{ form.position }}
+                </div>
+
+                <div class="space-y-2">
+                    <label for="{{ form.company.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Company</label>
+                    {{ form.company }}
+                </div>
+            </div>
+
+            <div class="space-y-2">
+                <label for="{{ form.content.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Testimonial Content</label>
+                {{ form.content }}
+            </div>
+
+            <div class="space-y-2">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Client Photo (Optional)</label>
+                <div class="mt-2 flex justify-center rounded-lg border border-dashed border-gray-300 dark:border-gray-600 px-6 py-10 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition relative group">
+                    <div class="text-center">
+                        <div class="mx-auto h-32 w-32 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-700 flex items-center justify-center mb-4 border-2 border-gray-200 dark:border-gray-500">
+                            {% if form.instance.image %}
+                                <img id="image-preview" src="{{ form.instance.image.url }}" alt="Preview" class="h-full w-full object-cover">
+                                <i id="image-placeholder" class="fas fa-image text-gray-400 text-4xl hidden"></i>
+                            {% else %}
+                                <img id="image-preview" src="#" alt="Preview" class="h-full w-full object-cover hidden">
+                                <i id="image-placeholder" class="fas fa-image text-gray-400 text-4xl"></i>
+                            {% endif %}
+                        </div>
+                        <div class="flex text-sm leading-6 text-gray-600 dark:text-gray-400 justify-center">
+                            <label for="{{ form.image.id_for_label }}" class="relative cursor-pointer rounded-md font-semibold text-primary hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2">
+                                <span>Upload a file</span>
+                                <input type="file" name="image" accept="image/*" id="{{ form.image.id_for_label }}" class="sr-only">
+                            </label>
+                            <p class="pl-1">or drag and drop</p>
+                        </div>
+                        <p class="text-xs leading-5 text-gray-500 dark:text-gray-400">PNG, JPG, GIF up to 10MB</p>
+                        <p id="file-name" class="text-xs text-green-600 font-medium mt-2 hidden"></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pt-6 flex flex-col sm:flex-row justify-end gap-4">
+                <a href="{% url 'manage_testimonials' %}" class="w-full sm:w-auto px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-bold rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition text-center">Cancel</a>
+                <button type="submit" class="w-full sm:w-auto px-6 py-3 bg-primary text-white font-bold rounded-lg hover:bg-blue-600 transition text-center">Save Testimonial</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    const imageInput = document.getElementById('{{ form.image.id_for_label }}');
+    const imagePreview = document.getElementById('image-preview');
+    const imagePlaceholder = document.getElementById('image-placeholder');
+    const fileNameDisplay = document.getElementById('file-name');
+
+    if (imageInput) {
+        imageInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                // Show file name
+                if (fileNameDisplay) {
+                    fileNameDisplay.textContent = 'Selected: ' + file.name;
+                    fileNameDisplay.classList.remove('hidden');
+                }
+
+                // Show preview
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    if (imagePreview) {
+                        imagePreview.src = e.target.result;
+                        imagePreview.classList.remove('hidden');
+                    }
+                    if (imagePlaceholder) {
+                        imagePlaceholder.classList.add('hidden');
+                    }
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+</script>
+{% endblock %}

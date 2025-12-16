@@ -1,0 +1,16 @@
+{% extends 'emails/base_email.html' %}
+
+{% block title %}Confirm Your Account{% endblock %}
+
+{% block content %}
+<h2 style="color: #111827; margin-top: 0;">Welcome to TechOhr!</h2>
+<p>Hi {{ user.username }},</p>
+<p>Thank you for registering with TechOhr. We are excited to have you on board!</p>
+<p>Please confirm your email address to activate your account and start your learning journey.</p>
+
+<center>
+    <a href="{{ activate_url }}" class="button">Confirm Email</a>
+</center>
+
+<p style="margin-top: 24px;">If you didn't create an account with us, please ignore this email.</p>
+{% endblock %}

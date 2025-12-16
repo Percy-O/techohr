@@ -1,0 +1,417 @@
+{% extends 'layouts/admin_base.html' %}
+
+{% block admin_content %}
+<script src="https://cdn.ckeditor.com/ckeditor5/40.2.0/classic/ckeditor.js"></script>
+<style>
+    .ck-editor__editable_inline {
+        min-height: 400px;
+    }
+    
+    /* Dark mode overrides for CKEditor */
+    .dark .ck.ck-editor__main>.ck-editor__editable:not(.ck-focused) {
+        background-color: #374151; /* gray-700 */
+        color: #f3f4f6; /* gray-100 */
+        border-color: #4b5563; /* gray-600 */
+    }
+    .dark .ck.ck-editor__main>.ck-editor__editable.ck-focused {
+        background-color: #374151;
+        color: #f3f4f6;
+        border-color: #3b82f6; /* blue-500 */
+    }
+    .dark .ck.ck-toolbar {
+        background-color: #1f2937; /* gray-800 */
+        border-color: #4b5563;
+    }
+    .dark .ck.ck-button {
+        color: #e5e7eb;
+    }
+    .dark .ck.ck-button:hover, .dark .ck.ck-button.ck-on {
+        background-color: #374151;
+        color: #fff;
+    }
+    .dark .ck.ck-list {
+        background-color: #1f2937;
+    }
+    .dark .ck.ck-list__item .ck-button:hover {
+        background-color: #374151;
+    }
+    .dark .ck-headings-dropdown .ck-dropdown__panel {
+        background-color: #1f2937;
+    }
+    .dark .ck.ck-dropdown__panel {
+        border-color: #4b5563;
+    }
+</style>
+<div class="flex flex-col space-y-4 w-full">
+    <h1 class="text-2xl font-normal text-gray-800 dark:text-gray-100">{{ title }}</h1>
+
+    <form method="post" enctype="multipart/form-data" class="flex flex-col lg:flex-row gap-6 w-full" id="postForm" target="_self">
+        {% csrf_token %}
+
+        <!-- Left Column (Main Content) -->
+        <div class="flex-1 space-y-4 min-w-0">
+            {% if form.non_field_errors %}
+            <div class="p-3 bg-red-50 text-red-600 border border-red-200 text-sm dark:bg-red-900/20 dark:text-red-400 dark:border-red-800">
+                {{ form.non_field_errors }}
+            </div>
+            {% endif %}
+
+            <div class="space-y-1">
+                {{ form.title }}
+                {% if form.title.errors %}
+                <p class="text-red-500 text-xs mt-1">{{ form.title.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Main Content Area -->
+            <div class="space-y-4">
+                {{ form.content }}
+            </div>
+
+            <!-- SEO Meta Box -->
+            <div class="border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm">
+                <div class="px-3 py-2 border-b border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 font-semibold text-gray-700 dark:text-gray-300 text-sm">
+                    SEO Settings
+                </div>
+                <div class="p-3 space-y-3">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1">Meta Title</label>
+                        {{ form.meta_title }}
+                        <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">Title to appear in search engines.</p>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1">Meta Description</label>
+                        {{ form.meta_description }}
+                        <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">Brief description for search results.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column (Sidebar) -->
+        <div class="w-full lg:w-72 space-y-4 flex-shrink-0 lg:order-last order-first">
+            <!-- Publish Meta Box -->
+            <div class="border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm">
+                <div class="px-3 py-2 border-b border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 font-semibold text-gray-700 dark:text-gray-300 text-sm flex justify-between">
+                    <span>Publish</span>
+                </div>
+                <div class="p-3 space-y-3 text-sm text-gray-600 dark:text-gray-300">
+                    <div class="flex justify-between items-center">
+                        <button type="button" name="save_draft" class="px-3 py-1 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-xs hover:bg-gray-200 dark:hover:bg-gray-600 dark:text-gray-200" onclick="submitForm('save')">Save Draft</button>
+                        <button type="button" class="px-3 py-1 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-xs hover:bg-gray-200 dark:hover:bg-gray-600 dark:text-gray-200" onclick="submitForm('preview')">Preview</button>
+                    </div>
+                    <div class="space-y-2 pt-2">
+                        <p class="flex items-center"><i class="fas fa-map-pin w-4 text-gray-400 dark:text-gray-500 mr-2"></i> Status: <span class="font-bold ml-1">{{ form.instance.get_status_display|default:"Draft" }}</span></p>
+                        
+                        <div class="flex items-center justify-between">
+                            <span class="flex items-center"><i class="fas fa-eye w-4 text-gray-400 dark:text-gray-500 mr-2"></i> Visibility:</span>
+                            {{ form.visibility }}
+                        </div>
+                        
+                        <p class="flex items-center"><i class="fas fa-calendar-alt w-4 text-gray-400 dark:text-gray-500 mr-2"></i> Publish: <span class="font-bold ml-1">Immediately</span> <a href="#" class="text-blue-600 dark:text-blue-400 underline text-xs ml-2">Edit</a></p>
+                    </div>
+                </div>
+                <div class="bg-gray-50 dark:bg-gray-900/50 border-t border-gray-300 dark:border-gray-700 p-3 flex justify-between items-center">
+                    <a href="{% url 'manage_posts' %}" class="text-red-600 dark:text-red-400 text-sm hover:underline">Move to Trash</a>
+                    <button type="button" name="publish" class="px-4 py-1.5 bg-blue-600 text-white font-bold rounded text-sm hover:bg-blue-700 shadow-sm" onclick="submitForm('publish')">Publish</button>
+                </div>
+            </div>
+
+            <!-- Categories Meta Box -->
+            <div class="border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm" x-data="{ 
+                newCategory: '', 
+                showInput: false,
+                addCategory() {
+                    if (!this.newCategory) return;
+                    fetch('{% url 'create_category_ajax' %}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCookie('csrftoken')
+                        },
+                        body: JSON.stringify({ name: this.newCategory })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Add to select list
+                            const select = document.querySelector('#id_category');
+                            const option = new Option(data.category.name, data.category.id);
+                            option.selected = true;
+                            select.add(option);
+                            
+                            this.newCategory = '';
+                            this.showInput = false;
+                        } else {
+                            alert(data.error);
+                        }
+                    });
+                }
+            }">
+                <div class="px-3 py-2 border-b border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 font-semibold text-gray-700 dark:text-gray-300 text-sm">
+                    Categories
+                </div>
+                <div class="p-3">
+                    <div class="max-h-48 overflow-y-auto border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 p-2 rounded mb-2">
+                        {{ form.category }}
+                    </div>
+                    
+                    <button type="button" @click="showInput = !showInput" class="text-blue-600 dark:text-blue-400 underline text-xs block mb-2" x-show="!showInput">+ Add New Category</button>
+                    
+                    <div x-show="showInput" x-cloak class="mt-2">
+                        <input type="text" x-model="newCategory" class="w-full text-sm border border-gray-300 dark:border-gray-600 rounded px-2 py-1 mb-2 focus:outline-none focus:border-primary bg-white dark:bg-gray-700 text-gray-900 dark:text-white" placeholder="New Category Name" @keydown.enter.prevent="addCategory()">
+                        <button type="button" @click="addCategory()" class="bg-primary text-white text-xs px-3 py-1 rounded hover:bg-blue-600">Add</button>
+                        <button type="button" @click="showInput = false" class="text-gray-500 dark:text-gray-400 text-xs ml-2 hover:underline">Cancel</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tags Meta Box -->
+            <div class="border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm" x-data="{ 
+                newTag: '', 
+                showInput: false,
+                addTag() {
+                    if (!this.newTag) return;
+                    fetch('{% url 'create_tag_ajax' %}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCookie('csrftoken')
+                        },
+                        body: JSON.stringify({ name: this.newTag })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Add to input field (comma separated)
+                            const input = document.querySelector('#id_tags_input');
+                            let currentTags = input.value.split(',').map(t => t.trim()).filter(t => t);
+                            if (!currentTags.includes(data.tag.name)) {
+                                currentTags.push(data.tag.name);
+                                input.value = currentTags.join(', ');
+                            }
+                            
+                            this.newTag = '';
+                            this.showInput = false;
+                        } else {
+                            alert(data.error);
+                        }
+                    });
+                }
+            }">
+                <div class="px-3 py-2 border-b border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 font-semibold text-gray-700 dark:text-gray-300 text-sm">
+                    Tags
+                </div>
+                <div class="p-3">
+                    {{ form.tags_input }}
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-2 mb-2">Separate tags with commas.</p>
+                    
+                    <button type="button" @click="showInput = !showInput" class="text-blue-600 dark:text-blue-400 underline text-xs block mb-2" x-show="!showInput">+ Add New Tag</button>
+                    
+                    <div x-show="showInput" x-cloak class="mt-2">
+                        <input type="text" x-model="newTag" class="w-full text-sm border border-gray-300 dark:border-gray-600 rounded px-2 py-1 mb-2 focus:outline-none focus:border-primary bg-white dark:bg-gray-700 text-gray-900 dark:text-white" placeholder="New Tag Name" @keydown.enter.prevent="addTag()">
+                        <button type="button" @click="addTag()" class="bg-primary text-white text-xs px-3 py-1 rounded hover:bg-blue-600">Add</button>
+                        <button type="button" @click="showInput = false" class="text-gray-500 dark:text-gray-400 text-xs ml-2 hover:underline">Cancel</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Featured Image Meta Box -->
+            <div class="border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm" x-data="imagePreview()">
+                <div class="px-3 py-2 border-b border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 font-semibold text-gray-700 dark:text-gray-300 text-sm">
+                    Featured Image
+                </div>
+                <div class="p-3">
+                    <div class="mb-2" x-show="imageUrl" style="display: none;">
+                        <img :src="imageUrl" class="w-full h-auto border border-gray-200 dark:border-gray-700 rounded">
+                        <p class="text-xs text-blue-600 dark:text-blue-400 mt-2 mb-2">Preview of selected image</p>
+                    </div>
+                    
+                    {% if form.instance.image %}
+                        <div class="mb-2" x-show="!imageUrl">
+                            <img src="{{ form.instance.image.url }}" class="w-full h-auto border border-gray-200 dark:border-gray-700 rounded">
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Current Image</p>
+                        </div>
+                    {% endif %}
+                    
+                    <div class="relative border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition text-center cursor-pointer">
+                        <input type="file" name="image" id="id_image" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" @change="fileChosen">
+                        <div class="text-gray-500 dark:text-gray-400">
+                            <i class="fas fa-cloud-upload-alt text-2xl mb-2"></i>
+                            <p class="text-xs font-bold">Click to upload</p>
+                            <p class="text-xs">or drag and drop</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Attributes Meta Box -->
+            <div class="border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm">
+                <div class="px-3 py-2 border-b border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 font-semibold text-gray-700 dark:text-gray-300 text-sm">
+                    Post Attributes
+                </div>
+                <div class="p-3">
+                    <div class="flex items-center space-x-2">
+                        {{ form.is_featured }}
+                        <label for="{{ form.is_featured.id_for_label }}" class="text-sm text-gray-700 dark:text-gray-300">Stick to the top of the blog</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+    let editorInstance;
+
+    ClassicEditor
+        .create(document.querySelector('#id_content'), {
+            toolbar: ['heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', 'blockQuote', '|', 'undo', 'redo'],
+            heading: {
+                options: [
+                    { model: 'paragraph', title: 'Paragraph', class: 'ck-heading_paragraph' },
+                    { model: 'heading1', view: 'h1', title: 'Heading 1', class: 'ck-heading_heading1' },
+                    { model: 'heading2', view: 'h2', title: 'Heading 2', class: 'ck-heading_heading2' },
+                    { model: 'heading3', view: 'h3', title: 'Heading 3', class: 'ck-heading_heading3' }
+                ]
+            }
+        })
+        .then(editor => {
+            editorInstance = editor;
+            
+            // Auto-generate Meta Description from Content
+            editor.model.document.on('change:data', () => {
+                const metaDescriptionField = document.querySelector('#id_meta_description');
+                // Only auto-update if the field is empty or was previously auto-filled (we can check if it matches the start of content)
+                // For simplicity as per request: automatically write... after user adds content.
+                // We'll update it if it's empty, or we can just always update it if the user hasn't focused/edited it manually.
+                // A simple approach is: if meta_description is empty, fill it.
+                
+                if (metaDescriptionField.value === '' || metaDescriptionField.dataset.autoGenerated === 'true') {
+                    const data = editor.getData();
+                    // Strip HTML tags to get plain text
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = data;
+                    let text = tempDiv.textContent || tempDiv.innerText || '';
+                    
+                    // Truncate to ~160 chars for SEO
+                    if (text.length > 160) {
+                        text = text.substring(0, 157) + '...';
+                    }
+                    
+                    metaDescriptionField.value = text;
+                    metaDescriptionField.dataset.autoGenerated = 'true';
+                }
+            });
+        })
+        .catch(error => {
+            console.error(error);
+        });
+
+    // Auto-generate Meta Title from Title
+    const titleField = document.querySelector('#id_title');
+    const metaTitleField = document.querySelector('#id_meta_title');
+    const metaDescriptionField = document.querySelector('#id_meta_description');
+
+    // Mark fields as auto-generated initially if they are empty
+    if (metaTitleField.value === '') metaTitleField.dataset.autoGenerated = 'true';
+    if (metaDescriptionField.value === '') metaDescriptionField.dataset.autoGenerated = 'true';
+
+    // If user manually edits meta fields, remove the auto-generated flag
+    metaTitleField.addEventListener('input', () => {
+        metaTitleField.dataset.autoGenerated = 'false';
+    });
+    
+    metaDescriptionField.addEventListener('input', () => {
+        metaDescriptionField.dataset.autoGenerated = 'false';
+    });
+
+    titleField.addEventListener('input', function() {
+        if (metaTitleField.value === '' || metaTitleField.dataset.autoGenerated === 'true') {
+            metaTitleField.value = this.value;
+            metaTitleField.dataset.autoGenerated = 'true';
+        }
+    });
+
+    // Image Preview Alpine Component
+    function imagePreview() {
+        return {
+            imageUrl: null,
+            fileChosen(event) {
+                this.fileToDataUrl(event, src => this.imageUrl = src)
+            },
+            fileToDataUrl(event, callback) {
+                if (!event.target.files.length) return
+                let file = event.target.files[0],
+                    reader = new FileReader()
+                reader.readAsDataURL(file)
+                reader.onload = e => callback(e.target.result)
+            }
+        }
+    }
+
+    // AJAX Category & Tag Functions
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    // Alpine functions are scoped, so we need to expose these or use x-data on the button context
+    // But since we put x-data on the div, we can access methods defined in x-data.
+    // However, for simplicity with Django template rendering, let's mix vanilla JS for the AJAX part
+    // interacting with the form elements.
+
+    function submitForm(actionType) {
+        // Sync CKEditor data to textarea
+        if (editorInstance) {
+            const data = editorInstance.getData();
+            document.querySelector('#id_content').value = data;
+        }
+
+        const form = document.getElementById('postForm');
+        
+        // Remove existing hidden input if any
+        const existingInput = form.querySelector('input[name="action_type"]');
+        if (existingInput) {
+            existingInput.remove();
+        }
+
+        // Add hidden input for the action
+        const hiddenInput = document.createElement('input');
+        hiddenInput.type = 'hidden';
+        hiddenInput.name = actionType === 'save' ? 'save_draft' : (actionType === 'publish' ? 'publish' : 'preview');
+        hiddenInput.value = 'true';
+        hiddenInput.name = 'action_type'; // Unified name to check in view, or we can use specific names.
+        // Actually, the view checks for keys 'save_draft' or 'publish'.
+        // So we should set the name to that.
+        
+        if (actionType === 'save') {
+            hiddenInput.name = 'save_draft';
+        } else if (actionType === 'publish') {
+            hiddenInput.name = 'publish';
+        }
+        
+        form.appendChild(hiddenInput);
+
+        if (actionType === 'preview') {
+            form.target = '_blank';
+            form.action = '{% url "post_preview" %}';
+        } else {
+            form.target = '_self';
+            form.action = ''; // Default action (current URL)
+        }
+        
+        form.submit();
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,89 @@
+{% extends 'layouts/admin_base.html' %}
+
+{% block admin_content %}
+<div class="flex justify-between items-center mb-8">
+    <div>
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">{{ title }}</h1>
+        {% if module %}
+        <p class="text-gray-500 dark:text-gray-400 mt-1">Module: <strong>{{ module.title }}</strong></p>
+        {% elif course %}
+        <p class="text-gray-500 dark:text-gray-400 mt-1">Course: <strong>{{ course.title }}</strong></p>
+        {% elif assessment %}
+            {% if assessment.module %}
+            <p class="text-gray-500 dark:text-gray-400 mt-1">Module: <strong>{{ assessment.module.title }}</strong></p>
+            {% else %}
+            <p class="text-gray-500 dark:text-gray-400 mt-1">Course: <strong>{{ assessment.course.title }}</strong></p>
+            {% endif %}
+        {% endif %}
+    </div>
+    
+    {% if module %}
+    <a href="{% url 'manage_modules' module.course.id %}" class="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition">
+        <i class="fas fa-arrow-left mr-2"></i> Back to Modules
+    </a>
+    {% elif course %}
+    <a href="{% url 'manage_courses' %}" class="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition">
+        <i class="fas fa-arrow-left mr-2"></i> Back to Courses
+    </a>
+    {% elif assessment %}
+        {% if assessment.module %}
+        <a href="{% url 'manage_modules' assessment.course.id %}" class="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition">
+            <i class="fas fa-arrow-left mr-2"></i> Back to Modules
+        </a>
+        {% else %}
+        <a href="{% url 'manage_courses' %}" class="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition">
+            <i class="fas fa-arrow-left mr-2"></i> Back to Courses
+        </a>
+        {% endif %}
+    {% endif %}
+</div>
+
+<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-8 max-w-3xl">
+    <form method="post" class="space-y-6">
+        {% csrf_token %}
+        
+        {% if form.non_field_errors %}
+        <div class="p-4 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg text-sm border border-red-200 dark:border-red-800">
+            {{ form.non_field_errors }}
+        </div>
+        {% endif %}
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="space-y-1">
+                <label class="block text-sm font-bold text-gray-700 dark:text-gray-300">Title</label>
+                {{ form.title }}
+                {% if form.title.errors %}<p class="text-red-500 text-xs mt-1">{{ form.title.errors.0 }}</p>{% endif %}
+            </div>
+            
+            <div class="space-y-1">
+                <label class="block text-sm font-bold text-gray-700 dark:text-gray-300">Type</label>
+                {{ form.assessment_type }}
+            </div>
+        </div>
+
+        <div class="space-y-1">
+            <label class="block text-sm font-bold text-gray-700 dark:text-gray-300">Description / Instructions</label>
+            {{ form.description }}
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="space-y-1">
+                <label class="block text-sm font-bold text-gray-700 dark:text-gray-300">Max Score</label>
+                {{ form.max_score }}
+            </div>
+            <div class="space-y-1">
+                <label class="block text-sm font-bold text-gray-700 dark:text-gray-300">Passing Score</label>
+                {{ form.passing_score }}
+            </div>
+            <div class="space-y-1">
+                <label class="block text-sm font-bold text-gray-700 dark:text-gray-300">Due Date</label>
+                {{ form.due_date }}
+            </div>
+        </div>
+
+        <div class="flex justify-end pt-4">
+            <button type="submit" class="px-6 py-2 bg-primary text-white font-bold rounded-lg hover:bg-blue-600 transition shadow-lg">Save Assessment</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

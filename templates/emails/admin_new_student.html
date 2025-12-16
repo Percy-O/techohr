@@ -1,0 +1,20 @@
+{% extends 'emails/base_email.html' %}
+
+{% block title %}New Student Registration{% endblock %}
+
+{% block content %}
+<h2 style="color: #111827; margin-top: 0;">New Student Registered</h2>
+<p>Hello Admin,</p>
+<p>A new student has registered on TechOhr.</p>
+
+<div style="background-color: #f3f4f6; padding: 16px; border-radius: 6px; margin: 24px 0;">
+    <p style="margin: 0 0 8px 0;"><strong>Username:</strong> {{ user.username }}</p>
+    <p style="margin: 0 0 8px 0;"><strong>Email:</strong> <a href="mailto:{{ user.email }}" style="color: #0066FF;">{{ user.email }}</a></p>
+    <p style="margin: 0 0 8px 0;"><strong>Date Joined:</strong> {{ user.date_joined|date:"F j, Y, g:i a" }}</p>
+</div>
+
+<p>You can manage users in the admin dashboard.</p>
+<center>
+    <a href="{{ dashboard_url }}" class="button">Manage Users</a>
+</center>
+{% endblock %}

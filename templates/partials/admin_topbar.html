@@ -1,0 +1,125 @@
+<header class="hidden lg:flex bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 h-14 justify-between items-center text-sm px-4 fixed top-0 lg:left-64 left-0 right-0 z-50 font-sans shadow-sm border-b border-gray-200 dark:border-gray-700" x-data="{ searchOpen: false }">
+    <!-- Left Side: Site Links & Search -->
+    <div class="flex items-center space-x-6 h-full">
+        <!-- Quick Links -->
+        <div class="flex items-center space-x-4 h-full">
+            <a href="{% url 'home' %}" class="flex items-center hover:text-primary transition h-full text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 px-2 rounded-lg" target="_blank" title="Visit Site">
+                <i class="fas fa-home text-lg"></i>
+            </a>
+
+            <!-- Theme Toggle -->
+            <button 
+                x-data="{ 
+                    darkMode: localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches),
+                    toggleTheme() {
+                        this.darkMode = !this.darkMode;
+                        if (this.darkMode) {
+                            document.documentElement.classList.add('dark');
+                            localStorage.setItem('theme', 'dark');
+                        } else {
+                            document.documentElement.classList.remove('dark');
+                            localStorage.setItem('theme', 'light');
+                        }
+                    }
+                }"
+                @click="toggleTheme()"
+                class="flex items-center hover:text-primary transition h-full text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 px-2 rounded-lg" 
+                :title="darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'"
+            >
+                <i class="fas" :class="darkMode ? 'fa-sun' : 'fa-moon'"></i>
+            </button>
+
+            <a href="{% url 'manage_comments' %}" class="flex items-center hover:text-primary transition h-full relative text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 px-2 rounded-lg" title="Comments">
+                <i class="fas fa-comment-alt text-lg"></i>
+                <span class="absolute top-3 right-1 flex h-2.5 w-2.5">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
+                </span>
+            </a>
+
+            <!-- New Content Dropdown -->
+            <div class="relative group h-full flex items-center" x-data="{ open: false }" @mouseenter="open = true" @mouseleave="open = false">
+                <button class="flex items-center hover:text-primary transition h-full text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 px-3 rounded-lg">
+                    <i class="fas fa-plus text-lg mr-2"></i> <span class="font-medium hidden md:inline">New</span>
+                </button>
+                <div x-show="open" x-cloak class="absolute top-full left-0 bg-white dark:bg-gray-800 min-w-[180px] shadow-xl border border-gray-100 dark:border-gray-700 rounded-lg mt-1 overflow-hidden z-50">
+                    <a href="{% url 'create_post' %}" class="block px-4 py-3 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-primary transition border-b border-gray-50 dark:border-gray-700">
+                        <i class="fas fa-pen mr-2 text-xs opacity-70"></i> Post
+                    </a>
+                    <a href="{% url 'create_course' %}" class="block px-4 py-3 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-primary transition border-b border-gray-50 dark:border-gray-700">
+                        <i class="fas fa-graduation-cap mr-2 text-xs opacity-70"></i> Course
+                    </a>
+                    <a href="{% url 'create_project' %}" class="block px-4 py-3 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-primary transition border-b border-gray-50 dark:border-gray-700">
+                        <i class="fas fa-project-diagram mr-2 text-xs opacity-70"></i> Project
+                    </a>
+                    <a href="{% url 'manage_users' %}" class="block px-4 py-3 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-primary transition">
+                        <i class="fas fa-users mr-2 text-xs opacity-70"></i> Manage Users
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Center: Search Bar (Desktop) -->
+    <div class="hidden md:flex flex-1 max-w-xl mx-8">
+        <div class="relative w-full group">
+            <input type="text" placeholder="Search anything..." class="w-full bg-gray-100 dark:bg-gray-900 text-gray-700 dark:text-gray-200 border-none rounded-full py-2.5 pl-12 pr-4 focus:ring-2 focus:ring-primary/20 focus:bg-white dark:focus:bg-gray-800 transition text-sm">
+            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <i class="fas fa-search text-gray-400 group-focus-within:text-primary transition"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Search Icon & Input -->
+    <div class="md:hidden flex items-center">
+        <button @click="searchOpen = !searchOpen" class="text-gray-500 dark:text-gray-400 hover:text-primary p-2">
+            <i class="fas fa-search text-lg"></i>
+        </button>
+    </div>
+
+    <!-- Mobile Search Overlay -->
+    <div x-show="searchOpen" x-cloak class="absolute top-14 left-0 w-full bg-white dark:bg-gray-800 p-4 shadow-md border-b border-gray-200 dark:border-gray-700 md:hidden" @click.away="searchOpen = false">
+        <div class="relative w-full">
+            <input type="text" placeholder="Search anything..." class="w-full bg-gray-100 dark:bg-gray-900 text-gray-700 dark:text-gray-200 border-none rounded-full py-2.5 pl-12 pr-4 focus:ring-2 focus:ring-primary/20 focus:bg-white dark:focus:bg-gray-800 transition text-sm">
+            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <i class="fas fa-search text-gray-400"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Side: User Profile -->
+    <div class="flex items-center h-full">
+        <div class="relative group h-full flex items-center" x-data="{ open: false }" @mouseenter="open = true" @mouseleave="open = false">
+            <button class="flex items-center hover:text-primary transition px-2 h-full space-x-3 group-hover:bg-gray-50 dark:group-hover:bg-gray-700 rounded-lg">
+                <div class="text-right hidden md:block">
+                    <p class="text-sm font-bold text-gray-800 dark:text-gray-200 leading-none">{{ request.user.username }}</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Administrator</p>
+                </div>
+                {% if request.user.profile_picture %}
+                <img src="{{ request.user.profile_picture.url }}" class="w-9 h-9 rounded-full border-2 border-white dark:border-gray-700 shadow-sm object-cover">
+                {% else %}
+                <div class="w-9 h-9 rounded-full bg-primary text-white flex items-center justify-center text-sm font-bold border-2 border-white dark:border-gray-700 shadow-sm">
+                    {{ request.user.username|first|upper }}
+                </div>
+                {% endif %}
+                <i class="fas fa-chevron-down text-xs text-gray-400"></i>
+            </button>
+            <div x-show="open" x-cloak class="absolute top-full right-0 bg-white dark:bg-gray-800 min-w-[220px] shadow-xl border border-gray-100 dark:border-gray-700 rounded-lg mt-1 p-2 z-50">
+                <div class="px-4 py-3 border-b border-gray-50 dark:border-gray-700 md:hidden">
+                    <p class="font-bold text-gray-800 dark:text-gray-200">{{ request.user.username }}</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 truncate">{{ request.user.email }}</p>
+                </div>
+                <a href="{% url 'profile' %}" class="block px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-primary rounded-md transition">
+                    <i class="fas fa-user-circle mr-2 text-gray-400"></i> Edit Profile
+                </a>
+                <a href="#" class="block px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-primary rounded-md transition">
+                    <i class="fas fa-cog mr-2 text-gray-400"></i> Settings
+                </a>
+                <div class="border-t border-gray-50 dark:border-gray-700 my-1"></div>
+                <a href="{% url 'logout' %}" class="block px-4 py-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition">
+                    <i class="fas fa-sign-out-alt mr-2"></i> Log Out
+                </a>
+            </div>
+        </div>
+    </div>
+</header>

@@ -1,0 +1,105 @@
+{% extends 'layouts/admin_base.html' %}
+
+{% block admin_content %}
+<div class="flex justify-between items-center mb-8">
+    <div>
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Manage Questions</h1>
+        <p class="text-gray-500 dark:text-gray-400 mt-1">Quiz: <strong>{{ assessment.title }}</strong></p>
+    </div>
+    <a href="{% url 'edit_assessment' assessment.id %}" class="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition">
+        <i class="fas fa-arrow-left mr-2"></i> Back to Assessment
+    </a>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <!-- Question List -->
+    <div class="lg:col-span-2 space-y-6">
+        {% for question in questions %}
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 relative group">
+            <div class="flex justify-between items-start">
+                <div class="flex items-start gap-4">
+                    <div class="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-sm flex-shrink-0">
+                        {{ forloop.counter }}
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-gray-900 dark:text-white mb-2">{{ question.text }}</h3>
+                        <div class="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
+                            <span class="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">{{ question.get_question_type_display }}</span>
+                            <span>{{ question.points }} Points</span>
+                        </div>
+                        
+                        <!-- Choices (if applicable) -->
+                        {% if question.choices.exists %}
+                        <div class="mt-4 space-y-2">
+                            {% for choice in question.choices.all %}
+                            <div class="flex items-center gap-2 text-sm {% if choice.is_correct %}text-green-600 dark:text-green-400 font-medium{% else %}text-gray-600 dark:text-gray-400{% endif %}">
+                                {% if choice.is_correct %}<i class="fas fa-check-circle"></i>{% else %}<i class="far fa-circle"></i>{% endif %}
+                                {{ choice.text }}
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="flex items-center gap-2">
+                    <a href="{% url 'manage_question_choices' question.id %}" class="text-blue-400 hover:text-blue-600 p-2 transition" title="Manage Choices">
+                        <i class="fas fa-list-ul"></i>
+                    </a>
+                    <form method="post" onsubmit="return confirm('Delete this question?');">
+                        {% csrf_token %}
+                        <input type="hidden" name="question_id" value="{{ question.id }}">
+                        <button type="submit" name="delete_question" class="text-red-400 hover:text-red-600 p-2 transition" title="Delete Question">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="text-center py-12 bg-white dark:bg-gray-800 rounded-xl border border-dashed border-gray-300 dark:border-gray-700">
+            <p class="text-gray-500 dark:text-gray-400">No questions added yet.</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Add Question Form -->
+    <div class="lg:col-span-1">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 sticky top-24">
+            <h3 class="font-bold text-lg text-gray-900 dark:text-white mb-4">Add New Question</h3>
+            <form method="post" class="space-y-4">
+                {% csrf_token %}
+                
+                <div class="space-y-1">
+                    <label class="block text-xs font-bold text-gray-700 dark:text-gray-300">Question Text</label>
+                    {{ question_form.text }}
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-1">
+                        <label class="block text-xs font-bold text-gray-700 dark:text-gray-300">Type</label>
+                        {{ question_form.question_type }}
+                    </div>
+                    <div class="space-y-1">
+                        <label class="block text-xs font-bold text-gray-700 dark:text-gray-300">Points</label>
+                        {{ question_form.points }}
+                    </div>
+                </div>
+                
+                <div class="space-y-1">
+                    <label class="block text-xs font-bold text-gray-700 dark:text-gray-300">Order</label>
+                    {{ question_form.order }}
+                </div>
+
+                <button type="submit" name="create_question" class="w-full py-2 bg-primary text-white font-bold rounded-lg hover:bg-blue-600 transition shadow-lg mt-2">
+                    Add Question
+                </button>
+            </form>
+            
+            <div class="mt-6 pt-6 border-t border-gray-100 dark:border-gray-700">
+                <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">After adding a question, click the list icon <i class="fas fa-list-ul text-blue-400"></i> to add choices.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

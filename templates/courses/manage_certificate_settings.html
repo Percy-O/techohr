@@ -1,0 +1,229 @@
+{% extends 'layouts/admin_base.html' %}
+
+{% block admin_content %}
+<div class="w-full">
+    <div class="flex justify-between items-center mb-8">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Certificate Design</h1>
+            <p class="text-gray-500 dark:text-gray-400 mt-1">Customize the look and feel of your course certificates.</p>
+        </div>
+        <a href="{% url 'manage_certificates' %}" class="text-gray-500 hover:text-primary dark:text-gray-400 dark:hover:text-white transition">
+            <i class="fas fa-arrow-left mr-2"></i> Back to Certificates
+        </a>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Preview Section (Placeholder) -->
+        <div class="lg:col-span-1 order-2 lg:order-2">
+             <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 sticky top-6">
+                <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Preview Info</h3>
+                <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-lg p-4 text-sm text-blue-800 dark:text-blue-300 mb-4">
+                    <i class="fas fa-info-circle mr-2"></i> Changes will apply to all newly generated certificates. Existing certificates may also be updated if re-downloaded.
+                </div>
+                <div class="space-y-4">
+                     <div>
+                        <span class="block text-xs font-semibold text-gray-500 uppercase">Current Logo</span>
+                        {% if form.instance.logo %}
+                            <img src="{{ form.instance.logo.url }}" alt="Logo" class="mt-2 h-16 object-contain border rounded p-1 bg-white">
+                        {% else %}
+                            <span class="text-sm text-gray-400">No logo uploaded (Default text used)</span>
+                        {% endif %}
+                     </div>
+                     <div>
+                        <span class="block text-xs font-semibold text-gray-500 uppercase">Current Background</span>
+                        {% if form.instance.background_image %}
+                            <img src="{{ form.instance.background_image.url }}" alt="Background" class="mt-2 w-full h-32 object-cover border rounded">
+                        {% else %}
+                            <span class="text-sm text-gray-400">No background image (Default border used)</span>
+                        {% endif %}
+                     </div>
+                      <div>
+                        <span class="block text-xs font-semibold text-gray-500 uppercase">Current Signature</span>
+                        {% if form.instance.signature %}
+                            <img src="{{ form.instance.signature.url }}" alt="Signature" class="mt-2 h-12 object-contain border rounded p-1 bg-white">
+                        {% else %}
+                            <span class="text-sm text-gray-400">No signature uploaded (Text name used)</span>
+                        {% endif %}
+                     </div>
+                </div>
+             </div>
+        </div>
+
+        <!-- Settings Form -->
+        <div class="lg:col-span-2 order-1 lg:order-1">
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+                <form method="post" enctype="multipart/form-data" class="p-6 md:p-8 space-y-6">
+                    {% csrf_token %}
+                    
+                    <!-- Images Section -->
+                    <div class="border-b border-gray-100 dark:border-gray-700 pb-6">
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
+                            <i class="fas fa-image text-primary mr-2"></i> Images & Branding
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Logo</label>
+                                <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition relative group cursor-pointer">
+                                    <div class="space-y-1 text-center">
+                                        <!-- Preview Image -->
+                                        <img id="logo-preview" 
+                                             src="{% if form.instance.logo %}{{ form.instance.logo.url }}{% endif %}" 
+                                             class="mx-auto h-16 object-contain {% if not form.instance.logo %}hidden{% endif %}" 
+                                             alt="Logo Preview">
+                                        
+                                        <!-- Placeholder Icon -->
+                                        <div id="logo-placeholder" class="{% if form.instance.logo %}hidden{% endif %}">
+                                            <i class="fas fa-image text-gray-400 text-3xl mb-3"></i>
+                                        </div>
+
+                                        {% if form.instance.logo %}
+                                            <p class="text-xs text-green-600 mt-1">Current file uploaded</p>
+                                        {% endif %}
+                                        <div class="flex text-sm text-gray-600 dark:text-gray-400 justify-center">
+                                            <label for="{{ form.logo.id_for_label }}" class="relative cursor-pointer bg-white dark:bg-gray-800 rounded-md font-medium text-primary hover:text-blue-500 focus-within:outline-none">
+                                                <span>Upload a file</span>
+                                                <input id="{{ form.logo.id_for_label }}" name="{{ form.logo.name }}" type="file" class="sr-only" accept="image/*">
+                                            </label>
+                                            <p class="pl-1">or drag and drop</p>
+                                        </div>
+                                        <p class="text-xs text-gray-500">PNG, JPG up to 2MB</p>
+                                    </div>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-1">Appears at top center. Transparent PNG recommended.</p>
+                            </div>
+                             <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Signature</label>
+                                <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition relative group cursor-pointer">
+                                    <div class="space-y-1 text-center">
+                                        <!-- Preview Image -->
+                                        <img id="signature-preview" 
+                                             src="{% if form.instance.signature %}{{ form.instance.signature.url }}{% endif %}" 
+                                             class="mx-auto h-12 object-contain {% if not form.instance.signature %}hidden{% endif %}" 
+                                             alt="Signature Preview">
+                                        
+                                        <!-- Placeholder Icon -->
+                                        <div id="signature-placeholder" class="{% if form.instance.signature %}hidden{% endif %}">
+                                            <i class="fas fa-file-signature text-gray-400 text-3xl mb-3"></i>
+                                        </div>
+
+                                        {% if form.instance.signature %}
+                                            <p class="text-xs text-green-600 mt-1">Current file uploaded</p>
+                                        {% endif %}
+                                        <div class="flex text-sm text-gray-600 dark:text-gray-400 justify-center">
+                                            <label for="{{ form.signature.id_for_label }}" class="relative cursor-pointer bg-white dark:bg-gray-800 rounded-md font-medium text-primary hover:text-blue-500 focus-within:outline-none">
+                                                <span>Upload a file</span>
+                                                <input id="{{ form.signature.id_for_label }}" name="{{ form.signature.name }}" type="file" class="sr-only" accept="image/*">
+                                            </label>
+                                            <p class="pl-1">or drag and drop</p>
+                                        </div>
+                                        <p class="text-xs text-gray-500">PNG, JPG up to 2MB</p>
+                                    </div>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-1">Appears above instructor name. Transparent PNG recommended.</p>
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Background Image</label>
+                                <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition relative group cursor-pointer">
+                                    <div class="space-y-1 text-center w-full">
+                                        <!-- Preview Image -->
+                                        <img id="bg-preview" 
+                                             src="{% if form.instance.background_image %}{{ form.instance.background_image.url }}{% endif %}" 
+                                             class="mx-auto h-32 object-cover rounded-md border border-gray-200 {% if not form.instance.background_image %}hidden{% endif %}" 
+                                             alt="Background Preview">
+                                        
+                                        <!-- Placeholder Icon -->
+                                        <div id="bg-placeholder" class="{% if form.instance.background_image %}hidden{% endif %}">
+                                            <i class="fas fa-image text-gray-400 text-4xl mb-3"></i>
+                                        </div>
+
+                                        {% if form.instance.background_image %}
+                                            <p class="text-xs text-green-600 mt-1">Current file uploaded</p>
+                                        {% endif %}
+                                        <div class="flex text-sm text-gray-600 dark:text-gray-400 justify-center">
+                                            <label for="{{ form.background_image.id_for_label }}" class="relative cursor-pointer bg-white dark:bg-gray-800 rounded-md font-medium text-primary hover:text-blue-500 focus-within:outline-none">
+                                                <span>Upload a file</span>
+                                                <input id="{{ form.background_image.id_for_label }}" name="{{ form.background_image.name }}" type="file" class="sr-only" accept="image/*">
+                                            </label>
+                                            <p class="pl-1">or drag and drop</p>
+                                        </div>
+                                        <p class="text-xs text-gray-500">Full A4 landscape image (297mm x 210mm)</p>
+                                    </div>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-1">If not provided, a default border is used.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Colors Section -->
+                    <div class="border-b border-gray-100 dark:border-gray-700 pb-6">
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
+                            <i class="fas fa-palette text-purple-500 mr-2"></i> Colors & Fonts
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Primary Color</label>
+                                {{ form.primary_color }}
+                                <p class="text-xs text-gray-500 mt-1">Main headings & names.</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Secondary Color</label>
+                                {{ form.secondary_color }}
+                                <p class="text-xs text-gray-500 mt-1">Subheadings & body text.</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Accent Color</label>
+                                {{ form.accent_color }}
+                                <p class="text-xs text-gray-500 mt-1">Borders & decorative elements.</p>
+                            </div>
+                             <div class="md:col-span-3">
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Font Family</label>
+                                {{ form.font_family }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end pt-2">
+                        <button type="submit" class="px-6 py-2 bg-primary text-white font-bold rounded-lg hover:bg-blue-600 transition shadow-lg shadow-blue-500/30">
+                            <i class="fas fa-save mr-2"></i> Save Settings
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    function setupPreview(inputId, imgId, placeholderId) {
+        const input = document.getElementById(inputId);
+        const img = document.getElementById(imgId);
+        const placeholder = document.getElementById(placeholderId);
+
+        if (input) {
+            input.addEventListener('change', function(e) {
+                if (e.target.files && e.target.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        if (img) {
+                            img.src = e.target.result;
+                            img.classList.remove('hidden');
+                        }
+                        if (placeholder) {
+                            placeholder.classList.add('hidden');
+                        }
+                    }
+                    reader.readAsDataURL(e.target.files[0]);
+                }
+            });
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        setupPreview('{{ form.logo.id_for_label }}', 'logo-preview', 'logo-placeholder');
+        setupPreview('{{ form.signature.id_for_label }}', 'signature-preview', 'signature-placeholder');
+        setupPreview('{{ form.background_image.id_for_label }}', 'bg-preview', 'bg-placeholder');
+    });
+</script>
+{% endblock %}

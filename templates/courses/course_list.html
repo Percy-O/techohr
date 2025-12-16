@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<!-- 1. Hero Section -->
+<section class="relative bg-white dark:bg-dark pt-32 pb-20 overflow-hidden transition-colors duration-300">
+    <!-- Background Image with Strong Overlay -->
+    <div class="absolute inset-0 z-0">
+        <!-- Learning/Course Background Image -->
+        <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80')] bg-cover bg-center opacity-10 dark:opacity-25 transition-opacity duration-300"></div>
+        <!-- Strong Overlay to overpower the image -->
+        <div class="absolute inset-0 bg-gradient-to-b from-white/95 via-white/90 to-white dark:from-dark/95 dark:via-dark/90 dark:to-dark transition-colors duration-300"></div>
+    </div>
+    
+    <div class="container mx-auto px-4 relative z-10 text-center">
+        <div class="inline-block px-4 py-1.5 mb-6 rounded-full border border-gray-200 dark:border-gray-700 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm transition-colors duration-300">
+            <span class="text-xs font-bold text-blue-600 dark:text-primary tracking-widest uppercase transition-colors duration-300">TechOhr Academy</span>
+        </div>
+        <h1 class="text-4xl md:text-6xl font-bold text-gray-900 dark:text-white mb-6 leading-tight transition-colors duration-300">
+            Master the Skills of <br> <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-green-600 dark:from-blue-400 dark:to-green-400 transition-colors duration-300">Tomorrow</span>
+        </h1>
+        <p class="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto transition-colors duration-300">
+            Expert-led courses in software development, data science, AI, and design. Elevate your career with practical, hands-on learning.
+        </p>
+    </div>
+</section>
+
+<!-- 2. Course Listing -->
+<section class="py-24 bg-gray-50 dark:bg-[#050B14] transition-colors duration-300">
+    <div class="container mx-auto px-4">
+        
+        <!-- Filters -->
+        <div class="flex flex-wrap justify-center gap-4 mb-16">
+            <button class="px-6 py-2 rounded-full bg-blue-600 dark:bg-primary text-white font-semibold shadow-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition transform hover:-translate-y-1">All Courses</button>
+            <button class="px-6 py-2 rounded-full bg-white dark:bg-[#0F1623] text-gray-600 dark:text-gray-300 font-semibold border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-blue-600 dark:hover:text-primary transition transform hover:-translate-y-1">Development</button>
+            <button class="px-6 py-2 rounded-full bg-white dark:bg-[#0F1623] text-gray-600 dark:text-gray-300 font-semibold border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-blue-600 dark:hover:text-primary transition transform hover:-translate-y-1">Data Science</button>
+            <button class="px-6 py-2 rounded-full bg-white dark:bg-[#0F1623] text-gray-600 dark:text-gray-300 font-semibold border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-blue-600 dark:hover:text-primary transition transform hover:-translate-y-1">Design</button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {% for course in courses %}
+            <!-- Course Card -->
+            <div class="group bg-white dark:bg-[#0F1623] rounded-2xl overflow-hidden shadow-sm hover:shadow-2xl transition duration-300 border border-gray-200 dark:border-gray-800 flex flex-col h-full relative">
+                <!-- Badge -->
+                <div class="absolute top-4 left-4 z-10">
+                    <span class="px-3 py-1 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm text-xs font-bold text-gray-900 dark:text-white rounded-full shadow-sm transition-colors duration-300">
+                        {{ course.category.name|default:"General" }}
+                    </span>
+                </div>
+
+                <a href="{% url 'course_detail' course.slug %}" class="relative overflow-hidden block h-56">
+                    {% if course.thumbnail %}
+                    <img src="{{ course.thumbnail.url }}" alt="{{ course.title }}" class="w-full h-full object-cover transform group-hover:scale-110 transition duration-700">
+                    {% else %}
+                    <div class="w-full h-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center group-hover:bg-gray-200 dark:group-hover:bg-gray-700 transition">
+                        <span class="text-gray-400 dark:text-gray-500 text-5xl"><i class="fas fa-graduation-cap"></i></span>
+                    </div>
+                    {% endif %}
+                    <!-- Overlay -->
+                    <div class="absolute inset-0 bg-black/20 dark:bg-dark/20 group-hover:bg-black/40 dark:group-hover:bg-dark/40 transition duration-300"></div>
+                </a>
+
+                <div class="p-6 flex-grow flex flex-col">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center text-xs text-gray-500 dark:text-gray-400 space-x-2 transition-colors duration-300">
+                            <span class="flex items-center"><i class="fas fa-signal mr-1 text-blue-600 dark:text-primary"></i> {{ course.level }}</span>
+                            <span>&bull;</span>
+                            <span class="flex items-center"><i class="fas fa-book-open mr-1 text-blue-600 dark:text-primary"></i> {{ course.modules.count }} Modules</span>
+                        </div>
+                        <div class="flex text-yellow-500 dark:text-yellow-400 text-xs">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star-half-alt"></i>
+                        </div>
+                    </div>
+
+                    <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2 group-hover:text-blue-600 dark:group-hover:text-primary transition leading-tight transition-colors duration-300">
+                        <a href="{% url 'course_detail' course.slug %}">{{ course.title }}</a>
+                    </h3>
+                    
+                    <p class="text-gray-600 dark:text-gray-400 text-sm mb-6 line-clamp-2 flex-grow transition-colors duration-300">
+                        {{ course.description|striptags }}
+                    </p>
+                    
+                    <div class="pt-5 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between mt-auto transition-colors duration-300">
+                        <div class="flex items-center">
+                            <div class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold mr-3 shadow-md">
+                                {{ course.instructor.username|first|upper }}
+                            </div>
+                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300 transition-colors duration-300">{{ course.instructor.username }}</span>
+                        </div>
+                        <div class="text-xl font-bold text-blue-600 dark:text-primary transition-colors duration-300">
+                            {% if course.price > 0 %}
+                                ${{ course.price }}
+                            {% else %}
+                                <span class="text-green-600 dark:text-green-500">Free</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-span-3 text-center py-20">
+                <div class="w-24 h-24 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center mx-auto mb-6 text-blue-600 dark:text-primary text-4xl animate-pulse transition-colors duration-300">
+                    <i class="fas fa-book-open"></i>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-2 transition-colors duration-300">Coming Soon</h3>
+                <p class="text-gray-500 dark:text-gray-400 max-w-md mx-auto transition-colors duration-300">We are crafting new courses to help you master the latest technologies. Stay tuned!</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- 3. Newsletter / Learning Path CTA -->
+<section class="py-20 bg-white dark:bg-dark relative overflow-hidden transition-colors duration-300">
+    <div class="absolute right-0 top-0 w-1/3 h-full bg-gradient-to-l from-blue-100/50 dark:from-primary/10 to-transparent transition-colors duration-300"></div>
+    <div class="container mx-auto px-4 relative z-10">
+        <div class="bg-gradient-to-r from-blue-600 to-blue-800 dark:from-blue-900 dark:to-dark p-12 rounded-3xl border border-blue-500/20 dark:border-gray-800 relative overflow-hidden transition-colors duration-300">
+            <div class="absolute -right-20 -top-20 w-64 h-64 bg-white/10 dark:bg-primary/20 rounded-full blur-3xl"></div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+                <div>
+                    <h2 class="text-3xl font-bold text-white mb-4">Not sure where to start?</h2>
+                    <p class="text-blue-100 dark:text-gray-300 mb-8 text-lg">
+                        Get a personalized learning path tailored to your career goals and current skill level.
+                    </p>
+                    <a href="{% url 'contact' %}" class="inline-block px-8 py-3 bg-white text-blue-900 dark:text-dark font-bold rounded-lg hover:bg-gray-100 transition shadow-lg">
+                        Get Your Learning Path
+                    </a>
+                </div>
+                <div class="hidden md:flex justify-end">
+                    <div class="w-full max-w-sm">
+                        <!-- Illustration Placeholder -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="bg-white/10 dark:bg-dark/50 p-4 rounded-xl border border-white/20 dark:border-gray-700 backdrop-blur-sm transition-colors duration-300">
+                                <i class="fas fa-code text-white dark:text-primary text-2xl mb-2"></i>
+                                <div class="h-2 w-16 bg-white/20 dark:bg-gray-700 rounded mb-2"></div>
+                                <div class="h-2 w-10 bg-white/20 dark:bg-gray-700 rounded"></div>
+                            </div>
+                            <div class="bg-white/10 dark:bg-dark/50 p-4 rounded-xl border border-white/20 dark:border-gray-700 backdrop-blur-sm mt-8 transition-colors duration-300">
+                                <i class="fas fa-database text-green-300 dark:text-secondary text-2xl mb-2"></i>
+                                <div class="h-2 w-16 bg-white/20 dark:bg-gray-700 rounded mb-2"></div>
+                                <div class="h-2 w-10 bg-white/20 dark:bg-gray-700 rounded"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

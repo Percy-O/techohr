@@ -1,0 +1,72 @@
+<footer class="bg-dark text-white pt-20 pb-8 border-t border-gray-800">
+    <div class="container mx-auto px-4">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <!-- Company Info -->
+            <div class="col-span-1 md:col-span-1">
+                <a href="{% url 'home' %}" class="flex items-center space-x-2 mb-6">
+                    <span class="text-xl font-bold tracking-wider">TECH</span>
+                    <span class="text-primary text-xl"><i class="fas fa-bolt"></i></span>
+                    <span class="text-xl font-bold tracking-wider">OHR</span>
+                </a>
+                <p class="text-gray-500 text-sm mb-6 max-w-xs">
+                    Empowering businesses with cutting-edge technology solutions and educating the next generation of tech leaders.
+                </p>
+                <div class="flex space-x-4">
+                    <a href="#" class="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center text-gray-400 hover:bg-primary hover:text-white transition"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" class="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center text-gray-400 hover:bg-primary hover:text-white transition"><i class="fab fa-twitter"></i></a>
+                    <a href="#" class="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center text-gray-400 hover:bg-primary hover:text-white transition"><i class="fab fa-linkedin-in"></i></a>
+                    <a href="#" class="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center text-gray-400 hover:bg-primary hover:text-white transition"><i class="fab fa-instagram"></i></a>
+                </div>
+            </div>
+
+            <!-- Links 1 -->
+            <div>
+                <h3 class="text-lg font-bold mb-4 text-white">Menu</h3>
+                <ul class="space-y-2 text-sm text-gray-400">
+                    <li><a href="{% url 'home' %}" class="hover:text-primary transition">Home</a></li>
+                    <li><a href="{% url 'about' %}" class="hover:text-primary transition">About Us</a></li>
+                    <li><a href="{% url 'service_list' %}" class="hover:text-primary transition">Services</a></li>
+                    <li><a href="{% url 'course_list' %}" class="hover:text-primary transition">Courses</a></li>
+                </ul>
+            </div>
+
+            <!-- Links 2 -->
+            <div>
+                <h3 class="text-lg font-bold mb-4 text-white">Legal</h3>
+                <ul class="space-y-2 text-sm text-gray-400">
+                    <li><a href="#" class="hover:text-primary transition">Privacy Policy</a></li>
+                    <li><a href="#" class="hover:text-primary transition">Terms of Service</a></li>
+                    <li><a href="#" class="hover:text-primary transition">Disclaimer</a></li>
+                    <li><a href="#" class="hover:text-primary transition">FAQ</a></li>
+                </ul>
+            </div>
+
+            <!-- Newsletter -->
+            <div>
+                <h3 class="text-lg font-bold mb-4 text-white">Newsletter</h3>
+                <p class="text-gray-400 text-sm mb-4">Subscribe to our newsletter for the latest tech trends.</p>
+                <form action="{% url 'subscribe' %}" method="post" class="flex flex-col space-y-2">
+                    {% csrf_token %}
+                    <input type="email" name="email" placeholder="Your email address" required class="px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-primary placeholder-gray-500 text-sm">
+                    <button type="submit" class="px-4 py-3 bg-primary text-white font-bold rounded-lg hover:bg-blue-600 transition text-sm">Subscribe</button>
+                </form>
+                {% if messages %}
+                <div class="mt-4">
+                    {% for message in messages %}
+                    {% if 'newsletter' in message.tags %}
+                    <div class="text-sm {% if 'success' in message.tags %}text-green-400{% else %}text-red-400{% endif %}">
+                        {{ message }}
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="border-t border-gray-800 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center text-sm text-gray-500">
+            <p>&copy; {% now "Y" %} TechOhr. All rights reserved.</p>
+            <p>Designed with <i class="fas fa-heart text-red-500"></i> by TechOhr Team</p>
+        </div>
+    </div>
+</footer>

@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-12 max-w-3xl">
+    <div class="text-center mb-12">
+        <div class="w-20 h-20 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-full flex items-center justify-center mx-auto mb-6">
+            <i class="fas fa-check text-4xl"></i>
+        </div>
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">Submission Received</h1>
+        <p class="text-gray-500 dark:text-gray-400">You have successfully submitted <strong>{{ assessment.title }}</strong>.</p>
+    </div>
+
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div class="p-8 border-b border-gray-100 dark:border-gray-700">
+            <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Submission Details</h3>
+            <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-6">
+                <div>
+                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Date Submitted</dt>
+                    <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ submission.submitted_at|date:"F j, Y, g:i a" }}</dd>
+                </div>
+                <div>
+                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Status</dt>
+                    <dd class="mt-1 text-sm">
+                        {% if submission.score is not None %}
+                            <span class="px-2 py-1 bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300 rounded-full text-xs font-bold">Graded</span>
+                        {% else %}
+                            <span class="px-2 py-1 bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300 rounded-full text-xs font-bold">Pending Review</span>
+                        {% endif %}
+                    </dd>
+                </div>
+                
+                {% if submission.score is not None %}
+                <div>
+                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Score</dt>
+                    <dd class="mt-1 text-2xl font-bold text-gray-900 dark:text-white">{{ submission.score }} <span class="text-sm text-gray-500 font-normal">/ {{ assessment.max_score }}</span></dd>
+                </div>
+                {% endif %}
+            </dl>
+        </div>
+
+        {% if submission.feedback %}
+        <div class="p-8 bg-gray-50 dark:bg-gray-700/30">
+            <h4 class="text-sm font-bold text-gray-900 dark:text-white mb-2">Instructor Feedback</h4>
+            <p class="text-gray-600 dark:text-gray-300 text-sm italic">"{{ submission.feedback }}"</p>
+        </div>
+        {% endif %}
+        
+        <div class="p-6 bg-gray-50 dark:bg-gray-700/50 text-center">
+            <a href="{% url 'course_detail' assessment.course.slug %}" class="text-blue-600 dark:text-blue-400 font-bold hover:underline">
+                Return to Course Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

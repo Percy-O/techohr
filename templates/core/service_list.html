@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<!-- 1. Hero Section -->
+<section class="relative bg-dark pt-32 pb-32 overflow-hidden transition-colors duration-300">
+    <!-- Background Elements -->
+    <div class="absolute inset-0 z-0">
+        <div class="absolute top-0 left-0 w-full h-full bg-[url('https://images.unsplash.com/photo-1519389950473-47ba0277781c?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80')] bg-cover bg-center"></div>
+        <div class="absolute inset-0 bg-dark/90"></div>
+    </div>
+
+    <div class="container mx-auto px-4 relative z-10 text-center">
+        <div class="inline-block px-4 py-1.5 mb-6 rounded-full border border-gray-700 bg-gray-800/50 backdrop-blur-sm animate-fade-in-up">
+            <span class="text-xs font-bold text-primary tracking-widest uppercase">Our Expertise</span>
+        </div>
+        <h1 class="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight animate-fade-in-up delay-100">
+            Comprehensive Tech Solutions <br> for <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-blue-600">Modern Businesses</span>
+        </h1>
+        <p class="text-xl text-gray-400 max-w-2xl mx-auto mb-10 animate-fade-in-up delay-200">
+            From custom software development to advanced AI integration, we provide the tools and strategies you need to scale.
+        </p>
+    </div>
+</section>
+
+<!-- 2. Services Grid -->
+<section class="py-24 bg-gray-50 dark:bg-[#0B0F19] -mt-20 relative z-20 animate-fade-in-up delay-300 transition-colors duration-300">
+    <div class="container mx-auto px-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {% for service in services %}
+            <div class="bg-white dark:bg-[#0F1623] rounded-2xl p-8 shadow-sm hover:shadow-2xl transition duration-300 border border-gray-200 dark:border-gray-800 group flex flex-col h-full">
+                <div class="mb-6 relative">
+                    <div class="w-16 h-16 bg-blue-50 dark:bg-blue-900/20 rounded-2xl flex items-center justify-center text-primary text-3xl group-hover:bg-primary group-hover:text-white transition duration-300">
+                        {% if service.icon %}
+                            <i class="{{ service.icon }}"></i>
+                        {% else %}
+                            <i class="fas fa-layer-group"></i>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <h3 class="text-2xl font-bold text-dark dark:text-white mb-4 group-hover:text-primary transition">{{ service.title }}</h3>
+                <p class="text-gray-600 dark:text-gray-400 mb-6 leading-relaxed flex-grow">{{ service.short_description }}</p>
+                
+                <div class="mt-auto pt-6 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
+                    <a href="{% url 'service_detail' service.slug %}" class="text-dark dark:text-white font-bold hover:text-primary dark:hover:text-primary transition flex items-center group-hover:translate-x-2 duration-300">
+                        Learn More <i class="fas fa-arrow-right ml-2 text-sm text-primary"></i>
+                    </a>
+                </div>
+            </div>
+            {% empty %}
+            <!-- Static Fallback if no services in DB -->
+            <div class="bg-white dark:bg-[#0F1623] rounded-2xl p-8 shadow-sm hover:shadow-2xl transition duration-300 border border-gray-200 dark:border-gray-800 group">
+                <div class="w-16 h-16 bg-blue-50 dark:bg-blue-900/20 rounded-2xl flex items-center justify-center text-primary text-3xl mb-6 group-hover:bg-primary group-hover:text-white transition">
+                    <i class="fas fa-laptop-code"></i>
+                </div>
+                <h3 class="text-2xl font-bold text-dark dark:text-white mb-4">Web Development</h3>
+                <p class="text-gray-600 dark:text-gray-400 mb-6">High-performance websites tailored to your brand.</p>
+                <a href="#" class="text-dark dark:text-white font-bold hover:text-primary dark:hover:text-primary transition flex items-center">Learn More <i class="fas fa-arrow-right ml-2"></i></a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- 3. Our Process -->
+<section class="py-24 bg-white dark:bg-[#0B0F19] overflow-hidden animate-fade-in-up transition-colors duration-300">
+    <div class="container mx-auto px-4">
+        <div class="flex flex-col md:flex-row gap-16 items-center">
+            <div class="md:w-1/2">
+                <span class="text-primary font-bold tracking-wider uppercase text-sm mb-2 block">How We Work</span>
+                <h2 class="text-4xl font-bold text-dark dark:text-white mb-6">A Proven Process for <br> Digital Success</h2>
+                <p class="text-gray-600 dark:text-gray-400 text-lg mb-8">We follow a structured agile methodology to ensure your project is delivered on time, within budget, and exceeds expectations.</p>
+                
+                <div class="space-y-8">
+                    <div class="flex">
+                        <div class="flex-shrink-0 mr-6">
+                            <div class="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/30 text-primary flex items-center justify-center font-bold text-xl">1</div>
+                        </div>
+                        <div>
+                            <h4 class="text-xl font-bold text-dark dark:text-white mb-2">Discovery & Strategy</h4>
+                            <p class="text-gray-500 dark:text-gray-400">We analyze your requirements, market trends, and competitors to build a solid roadmap.</p>
+                        </div>
+                    </div>
+                    <div class="flex">
+                        <div class="flex-shrink-0 mr-6">
+                            <div class="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/30 text-primary flex items-center justify-center font-bold text-xl">2</div>
+                        </div>
+                        <div>
+                            <h4 class="text-xl font-bold text-dark dark:text-white mb-2">Design & Development</h4>
+                            <p class="text-gray-500 dark:text-gray-400">Our designers and developers work in tandem to create a seamless, functional product.</p>
+                        </div>
+                    </div>
+                    <div class="flex">
+                        <div class="flex-shrink-0 mr-6">
+                            <div class="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/30 text-primary flex items-center justify-center font-bold text-xl">3</div>
+                        </div>
+                        <div>
+                            <h4 class="text-xl font-bold text-dark dark:text-white mb-2">Testing & Launch</h4>
+                            <p class="text-gray-500 dark:text-gray-400">Rigorous QA testing ensures a bug-free launch, followed by deployment to production.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="md:w-1/2 relative">
+                <div class="absolute inset-0 bg-gradient-to-r from-blue-200 to-purple-200 dark:from-blue-900/20 dark:to-purple-900/20 rounded-full filter blur-3xl opacity-30 transform rotate-12"></div>
+                <img src="https://images.unsplash.com/photo-1553877615-30c7316315d6?ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80" alt="Process" class="relative z-10 rounded-2xl shadow-2xl w-full border border-gray-200 dark:border-gray-800">
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 4. CTA Section -->
+<section class="py-24 bg-dark dark:bg-[#050B14] relative overflow-hidden animate-fade-in-up transition-colors duration-300">
+    <div class="absolute inset-0 opacity-20">
+        <svg class="h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+            <path d="M0 100 C 20 0 50 0 100 100 Z" fill="#0066FF" />
+        </svg>
+    </div>
+    <div class="container mx-auto px-4 relative z-10 text-center">
+        <h2 class="text-4xl md:text-5xl font-bold text-white mb-6">Ready to Transform Your Business?</h2>
+        <p class="text-xl text-gray-400 mb-10 max-w-2xl mx-auto">Let's discuss how TechOhr can help you achieve your technology goals with our expert solutions.</p>
+        <div class="flex flex-col sm:flex-row justify-center gap-4">
+            <a href="{% url 'contact' %}" class="px-8 py-4 bg-primary text-white font-bold rounded-lg hover:bg-blue-600 transition shadow-lg shadow-blue-500/30">
+                Start a Project
+            </a>
+            <a href="{% url 'course_list' %}" class="px-8 py-4 border border-gray-600 text-white font-bold rounded-lg hover:bg-gray-800 transition">
+                Explore Courses
+            </a>
+        </div>
+    </div>
+</section>
+{% endblock %}
