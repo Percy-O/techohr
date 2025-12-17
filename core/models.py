@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils.text import slugify
+from django.urls import reverse
 import uuid
 
 class Service(models.Model):
@@ -27,6 +28,9 @@ class Service(models.Model):
     def __str__(self):
         return self.title
 
+    def get_absolute_url(self):
+        return reverse('service_detail', kwargs={'slug': self.slug})
+
 class Project(models.Model):
     title = models.CharField(max_length=200)
     slug = models.SlugField(unique=True)
@@ -52,6 +56,9 @@ class Project(models.Model):
 
     def __str__(self):
         return self.title
+
+    def get_absolute_url(self):
+        return reverse('project_detail', kwargs={'slug': self.slug})
 
 class Testimonial(models.Model):
     client_name = models.CharField(max_length=200)

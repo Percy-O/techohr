@@ -5,6 +5,28 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}TechOhr - Building the Future{% endblock %}</title>
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="{% block meta_description %}TechOhr is a leading technology platform offering professional courses, web development services, and tech insights. Master Django, Python, and modern web technologies with us.{% endblock %}">
+    <meta name="keywords" content="{% block meta_keywords %}TechOhr, online courses, web development, software engineering, django, python, tech education, programming tutorials{% endblock %}">
+    <meta name="author" content="TechOhr">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="{{ request.build_absolute_uri }}">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="{% block og_type %}website{% endblock %}">
+    <meta property="og:url" content="{{ request.build_absolute_uri }}">
+    <meta property="og:title" content="{% block og_title %}TechOhr - Building the Future{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}TechOhr is a leading technology platform offering professional courses, web development services, and tech insights.{% endblock %}">
+    <meta property="og:image" content="{% block og_image %}{% static 'images/og-default.jpg' %}{% endblock %}">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="{{ request.build_absolute_uri }}">
+    <meta property="twitter:title" content="{% block twitter_title %}TechOhr - Building the Future{% endblock %}">
+    <meta property="twitter:description" content="{% block twitter_description %}TechOhr is a leading technology platform offering professional courses, web development services, and tech insights.{% endblock %}">
+    <meta property="twitter:image" content="{% block twitter_image %}{% static 'images/og-default.jpg' %}{% endblock %}">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/alpinejs" defer></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />

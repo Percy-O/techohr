@@ -1,5 +1,17 @@
 {% extends 'base.html' %}
 
+{% block title %}{{ course.title }} | TechOhr{% endblock %}
+{% block meta_description %}{{ course.description|striptags|truncatewords:30 }}{% endblock %}
+{% block meta_keywords %}{{ course.title }}, {{ course.category.name }}, online course, learn {{ course.title }}{% endblock %}
+
+{% block og_title %}{{ course.title }} | TechOhr{% endblock %}
+{% block og_description %}{{ course.description|striptags|truncatewords:30 }}{% endblock %}
+{% block og_image %}{% if course.thumbnail %}{{ request.scheme }}://{{ request.get_host }}{{ course.thumbnail.url }}{% else %}{{ block.super }}{% endif %}{% endblock %}
+
+{% block twitter_title %}{{ course.title }} | TechOhr{% endblock %}
+{% block twitter_description %}{{ course.description|striptags|truncatewords:30 }}{% endblock %}
+{% block twitter_image %}{% if course.thumbnail %}{{ request.scheme }}://{{ request.get_host }}{{ course.thumbnail.url }}{% else %}{{ block.super }}{% endif %}{% endblock %}
+
 {% block content %}
 <div class="bg-gray-50 dark:bg-[#050B14] text-gray-900 dark:text-white py-12 transition-colors duration-300">
     <div class="container mx-auto px-4">

@@ -3,6 +3,7 @@ from django.conf import settings
 from django.utils.text import slugify
 from django.utils import timezone
 from datetime import timedelta
+from django.urls import reverse
 import uuid
 
 class Category(models.Model):
@@ -52,6 +53,9 @@ class Course(models.Model):
 
     def __str__(self):
         return self.title
+
+    def get_absolute_url(self):
+        return reverse('course_detail', kwargs={'slug': self.slug})
     
     def get_duration(self):
         # Calculate total duration from lessons
