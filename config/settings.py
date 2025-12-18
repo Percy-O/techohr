@@ -144,12 +144,13 @@ LOGOUT_REDIRECT_URL = "home"
 
 # Email Configuration
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'mail.techohr.com.ng'
+EMAIL_HOST = 'panel222.harmondns.net'
 EMAIL_PORT = 465
 EMAIL_USE_SSL = True
 EMAIL_USE_TLS = False
 EMAIL_HOST_USER = 'info@techohr.com.ng'
-EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+#EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+EMAIL_HOST_PASSWORD = '@Holawahlay1'
 DEFAULT_FROM_EMAIL = 'TechOhr <info@techohr.com.ng>'
 SERVER_EMAIL = 'info@techohr.com.ng'
 
