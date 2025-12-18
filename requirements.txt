@@ -1,3 +1,4 @@
 Django>=5.0
 Pillow
 python-dotenv
+fpdf2
