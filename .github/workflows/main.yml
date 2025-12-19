@@ -11,12 +11,15 @@ jobs:
     - name: 🚚 Get latest code
       uses: actions/checkout@v4
     
-    - name: 📂 Sync files
-      uses: SamKirkland/FTP-Deploy-Action@v4.3.6
+    - name: FTP Deploy
+      uses: sebastianpopp/ftp-action@releases/v2
       with:
         server:  ftp.techohr.com.ng
         username: ${{ secrets.ftp_username }}
         password: ${{ secrets.ftp_password }}
         server-dir: /techohr/
-        timeout: 300000
-        passive: true 
+        local-dir: ./
+        protocol: ftps
+        port: 21
+        
+        
