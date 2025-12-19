@@ -21,7 +21,6 @@
         </p>
     </div>
 </section>
-
 <!-- 2. Our Story / Introduction -->
 <section class="py-24 bg-white dark:bg-[#0B0F19] transition-colors duration-300 animate-fade-in-up">
     <div class="container mx-auto px-4">
@@ -94,6 +93,51 @@
     </div>
 </section>
 
+<section class="py-24 bg-white dark:bg-[#0B0F19] overflow-hidden animate-fade-in-up transition-colors duration-300">
+    <div class="container mx-auto px-4">
+        <div class="flex flex-col md:flex-row gap-16 items-center">
+            <div class="md:w-1/2">
+                <span class="text-primary font-bold tracking-wider uppercase text-sm mb-2 block">How We Work</span>
+                <h2 class="text-4xl font-bold text-dark dark:text-white mb-6">A Proven Process for <br> Digital Success</h2>
+                <p class="text-gray-600 dark:text-gray-400 text-lg mb-8">We follow a structured agile methodology to ensure your project is delivered on time, within budget, and exceeds expectations.</p>
+                <div class="space-y-8">
+                    <div class="flex">
+                        <div class="flex-shrink-0 mr-6">
+                            <div class="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/30 text-primary flex items-center justify-center font-bold text-xl">1</div>
+                        </div>
+                        <div>
+                            <h4 class="text-xl font-bold text-dark dark:text-white mb-2">Discovery & Strategy</h4>
+                            <p class="text-gray-500 dark:text-gray-400">We analyze your requirements, market trends, and competitors to build a solid roadmap.</p>
+                        </div>
+                    </div>
+                    <div class="flex">
+                        <div class="flex-shrink-0 mr-6">
+                            <div class="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/30 text-primary flex items-center justify-center font-bold text-xl">2</div>
+                        </div>
+                        <div>
+                            <h4 class="text-xl font-bold text-dark dark:text-white mb-2">Design & Development</h4>
+                            <p class="text-gray-500 dark:text-gray-400">Our designers and developers work in tandem to create a seamless, functional product.</p>
+                        </div>
+                    </div>
+                    <div class="flex">
+                        <div class="flex-shrink-0 mr-6">
+                            <div class="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/30 text-primary flex items-center justify-center font-bold text-xl">3</div>
+                        </div>
+                        <div>
+                            <h4 class="text-xl font-bold text-dark dark:text-white mb-2">Testing & Launch</h4>
+                            <p class="text-gray-500 dark:text-gray-400">Rigorous QA testing ensures a bug-free launch, followed by deployment to production.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="md:w-1/2 relative">
+                <div class="absolute inset-0 bg-gradient-to-r from-blue-200 to-purple-200 dark:from-blue-900/20 dark:to-purple-900/20 rounded-full filter blur-3xl opacity-30 transform rotate-12"></div>
+                <img src="https://images.unsplash.com/photo-1553877615-30c7316315d6?ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80" alt="Process" class="relative z-10 rounded-2xl shadow-2xl w-full border border-gray-200 dark:border-gray-800">
+            </div>
+        </div>
+    </div>
+</section>
+
 <!-- 4. Core Values -->
 <section class="py-24 bg-gray-50 dark:bg-[#0F1623] transition-colors duration-300 animate-fade-in-up">
     <div class="container mx-auto px-4">
@@ -148,20 +192,20 @@
     <div class="container mx-auto px-4">
         <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center divide-x divide-gray-700 dark:divide-gray-800">
             <div>
-                <div class="text-4xl md:text-5xl font-bold text-blue-500 dark:text-primary mb-2 transition-colors duration-300">50+</div>
+                <div class="text-4xl md:text-5xl font-bold text-blue-500 dark:text-primary mb-2 transition-colors duration-300">{{ company_stats.projects_completed|default:'50' }}+</div>
                 <p class="text-gray-400 text-sm uppercase tracking-wider">Projects Completed</p>
             </div>
             <div>
-                <div class="text-4xl md:text-5xl font-bold text-blue-500 dark:text-primary mb-2 transition-colors duration-300">30+</div>
+                <div class="text-4xl md:text-5xl font-bold text-blue-500 dark:text-primary mb-2 transition-colors duration-300">{{ company_stats.happy_clients|default:'30' }}+</div>
                 <p class="text-gray-400 text-sm uppercase tracking-wider">Happy Clients</p>
             </div>
             <div>
-                <div class="text-4xl md:text-5xl font-bold text-blue-500 dark:text-primary mb-2 transition-colors duration-300">15+</div>
+                <div class="text-4xl md:text-5xl font-bold text-blue-500 dark:text-primary mb-2 transition-colors duration-300">{{ company_stats.team_members|default:'15' }}+</div>
                 <p class="text-gray-400 text-sm uppercase tracking-wider">Team Members</p>
             </div>
             <div>
-                <div class="text-4xl md:text-5xl font-bold text-blue-500 dark:text-primary mb-2 transition-colors duration-300">5+</div>
-                <p class="text-gray-400 text-sm uppercase tracking-wider">Awards Won</p>
+                <div class="text-4xl md:text-5xl font-bold text-blue-500 dark:text-primary mb-2 transition-colors duration-300">{{ company_stats.experience_years|default:'3' }}+</div>
+                <p class="text-gray-400 text-sm uppercase tracking-wider">Years Experience</p>
             </div>
         </div>
     </div>
@@ -176,45 +220,26 @@
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            <!-- Team Member 1 -->
+            {% for employee in employees %}
             <div class="text-center group">
                 <div class="relative w-64 h-64 mx-auto rounded-full overflow-hidden mb-6 border-4 border-gray-100 dark:border-gray-800 group-hover:border-blue-600 dark:group-hover:border-primary transition duration-300">
+                    {% if employee.photo %}
+                    <img src="{{ employee.photo.url }}" alt="{{ employee.name }}" class="w-full h-full object-cover">
+                    {% else %}
                     <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80" alt="Team Member" class="w-full h-full object-cover">
-                    <!-- Social Overlay -->
+                    {% endif %}
                     <div class="absolute inset-0 bg-black/60 dark:bg-dark/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition duration-300 gap-4">
-                        <a href="#" class="text-white hover:text-blue-400 dark:hover:text-primary"><i class="fab fa-linkedin text-xl"></i></a>
-                        <a href="#" class="text-white hover:text-blue-400 dark:hover:text-primary"><i class="fab fa-twitter text-xl"></i></a>
+                        {% if employee.linkedin_url %}<a href="{{ employee.linkedin_url }}" class="text-white hover:text-blue-400 dark:hover:text-primary"><i class="fab fa-linkedin text-xl"></i></a>{% endif %}
+                        {% if employee.twitter_url %}<a href="{{ employee.twitter_url }}" class="text-white hover:text-blue-400 dark:hover:text-primary"><i class="fab fa-twitter text-xl"></i></a>{% endif %}
+                        {% if employee.github_url %}<a href="{{ employee.github_url }}" class="text-white hover:text-blue-400 dark:hover:text-primary"><i class="fab fa-github text-xl"></i></a>{% endif %}
                     </div>
                 </div>
-                <h3 class="text-xl font-bold text-gray-900 dark:text-white transition-colors duration-300">David Okeke</h3>
-                <p class="text-blue-600 dark:text-primary font-medium transition-colors duration-300">CEO & Founder</p>
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white transition-colors duration-300">{{ employee.name }}</h3>
+                <p class="text-blue-600 dark:text-primary font-medium transition-colors duration-300">{{ employee.role }}</p>
             </div>
-
-            <!-- Team Member 2 -->
-            <div class="text-center group">
-                <div class="relative w-64 h-64 mx-auto rounded-full overflow-hidden mb-6 border-4 border-gray-100 dark:border-gray-800 group-hover:border-blue-600 dark:group-hover:border-primary transition duration-300">
-                    <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80" alt="Team Member" class="w-full h-full object-cover">
-                    <div class="absolute inset-0 bg-black/60 dark:bg-dark/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition duration-300 gap-4">
-                        <a href="#" class="text-white hover:text-blue-400 dark:hover:text-primary"><i class="fab fa-linkedin text-xl"></i></a>
-                        <a href="#" class="text-white hover:text-blue-400 dark:hover:text-primary"><i class="fab fa-twitter text-xl"></i></a>
-                    </div>
-                </div>
-                <h3 class="text-xl font-bold text-gray-900 dark:text-white transition-colors duration-300">Sarah Johnson</h3>
-                <p class="text-blue-600 dark:text-primary font-medium transition-colors duration-300">Head of Product</p>
-            </div>
-
-            <!-- Team Member 3 -->
-            <div class="text-center group">
-                <div class="relative w-64 h-64 mx-auto rounded-full overflow-hidden mb-6 border-4 border-gray-100 dark:border-gray-800 group-hover:border-blue-600 dark:group-hover:border-primary transition duration-300">
-                    <img src="https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80" alt="Team Member" class="w-full h-full object-cover">
-                    <div class="absolute inset-0 bg-black/60 dark:bg-dark/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition duration-300 gap-4">
-                        <a href="#" class="text-white hover:text-blue-400 dark:hover:text-primary"><i class="fab fa-linkedin text-xl"></i></a>
-                        <a href="#" class="text-white hover:text-blue-400 dark:hover:text-primary"><i class="fab fa-twitter text-xl"></i></a>
-                    </div>
-                </div>
-                <h3 class="text-xl font-bold text-gray-900 dark:text-white transition-colors duration-300">Michael Chen</h3>
-                <p class="text-blue-600 dark:text-primary font-medium transition-colors duration-300">Lead Developer</p>
-            </div>
+            {% empty %}
+            <div class="col-span-3 text-center text-gray-500 dark:text-gray-400">Team members will appear here.</div>
+            {% endfor %}
         </div>
     </div>
 </section>

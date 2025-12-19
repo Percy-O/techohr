@@ -31,9 +31,9 @@
         <!-- Filters -->
         <div class="flex flex-wrap justify-center gap-4 mb-16">
             <button class="px-6 py-2 rounded-full bg-blue-600 dark:bg-primary text-white font-semibold shadow-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition transform hover:-translate-y-1">All Courses</button>
-            <button class="px-6 py-2 rounded-full bg-white dark:bg-[#0F1623] text-gray-600 dark:text-gray-300 font-semibold border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-blue-600 dark:hover:text-primary transition transform hover:-translate-y-1">Development</button>
-            <button class="px-6 py-2 rounded-full bg-white dark:bg-[#0F1623] text-gray-600 dark:text-gray-300 font-semibold border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-blue-600 dark:hover:text-primary transition transform hover:-translate-y-1">Data Science</button>
-            <button class="px-6 py-2 rounded-full bg-white dark:bg-[#0F1623] text-gray-600 dark:text-gray-300 font-semibold border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-blue-600 dark:hover:text-primary transition transform hover:-translate-y-1">Design</button>
+            {% for cat in categories %}
+            <button class="px-6 py-2 rounded-full bg-white dark:bg-[#0F1623] text-gray-600 dark:text-gray-300 font-semibold border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-blue-600 dark:hover:text-primary transition transform hover:-translate-y-1">{{ cat.name }}</button>
+            {% endfor %}
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -80,7 +80,7 @@
                     </h3>
                     
                     <p class="text-gray-600 dark:text-gray-400 text-sm mb-6 line-clamp-2 flex-grow transition-colors duration-300">
-                        {{ course.description|striptags }}
+                        {{ course.description|striptags|truncatewords:20 }}
                     </p>
                     
                     <div class="pt-5 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between mt-auto transition-colors duration-300">
@@ -92,7 +92,7 @@
                         </div>
                         <div class="text-xl font-bold text-blue-600 dark:text-primary transition-colors duration-300">
                             {% if course.price > 0 %}
-                                ${{ course.price }}
+                                ₦{{ course.price|floatformat:0 }}
                             {% else %}
                                 <span class="text-green-600 dark:text-green-500">Free</span>
                             {% endif %}

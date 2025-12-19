@@ -67,6 +67,7 @@ class Testimonial(models.Model):
     content = models.TextField()
     image = models.ImageField(upload_to='testimonials/', blank=True, null=True)
     rating = models.IntegerField(default=5)
+    project = models.ForeignKey(Project, null=True, blank=True, on_delete=models.SET_NULL)
 
     def __str__(self):
         return f"{self.client_name} - {self.company}"
@@ -88,3 +89,67 @@ class Newsletter(models.Model):
 
     def __str__(self):
         return self.email
+
+# --- Site Settings & Company ---
+
+class SiteSettings(models.Model):
+    site_name = models.CharField(max_length=200, default='TechOhr')
+    logo = models.ImageField(upload_to='settings/logo/', blank=True, null=True)
+    favicon = models.ImageField(upload_to='settings/favicon/', blank=True, null=True)
+    logo_light = models.ImageField(upload_to='settings/logo/', blank=True, null=True)
+    logo_dark = models.ImageField(upload_to='settings/logo/', blank=True, null=True)
+
+    # Contact Info
+    address = models.CharField(max_length=255, blank=True)
+    email_primary = models.EmailField(blank=True)
+    email_support = models.EmailField(blank=True)
+    phone_primary = models.CharField(max_length=50, blank=True)
+
+    # Social Links
+    facebook_url = models.URLField(blank=True)
+    twitter_url = models.URLField(blank=True)
+    linkedin_url = models.URLField(blank=True)
+    instagram_url = models.URLField(blank=True)
+
+    # Map Embed (Google Maps iframe src)
+    map_embed_url = models.URLField(blank=True, help_text="Paste the Google Maps embed URL")
+
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return "Site Settings"
+
+class CompanyStats(models.Model):
+    projects_completed = models.PositiveIntegerField(default=0)
+    happy_clients = models.PositiveIntegerField(default=0)
+    team_members = models.PositiveIntegerField(default=0)
+    experience_years = models.PositiveIntegerField(default=3)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return "Company Stats"
+
+class Employee(models.Model):
+    name = models.CharField(max_length=150)
+    role = models.CharField(max_length=150)
+    photo = models.ImageField(upload_to='employees/photos/', blank=True, null=True)
+    linkedin_url = models.URLField(blank=True)
+    twitter_url = models.URLField(blank=True)
+    github_url = models.URLField(blank=True)
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order', 'name']
+
+
+class PageVisit(models.Model):
+    page_url = models.CharField(max_length=255)
+    visited_at = models.DateTimeField(auto_now_add=True)
+    user = models.ForeignKey('users.User', on_delete=models.SET_NULL, null=True, blank=True)
+
+    def __str__(self):
+        who = self.user.username if self.user else 'Anonymous'
+        return f"{who} visited {self.page_url} at {self.visited_at}"
+
+    def __str__(self):
+        return f"{self.name} - {self.role}"

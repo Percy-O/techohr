@@ -34,7 +34,7 @@
                             </div>
                             <div class="ml-6">
                                 <p class="text-sm text-gray-500 dark:text-gray-400 mb-1 transition-colors duration-300">Our Location</p>
-                                <p class="font-medium text-lg transition-colors duration-300">123 Tech Avenue, Victoria Island, Lagos, Nigeria</p>
+                                <p class="font-medium text-lg transition-colors duration-300">{{ site_settings.address|default:'123 Tech Avenue, Victoria Island, Lagos, Nigeria' }}</p>
                             </div>
                         </div>
                         
@@ -44,8 +44,12 @@
                             </div>
                             <div class="ml-6">
                                 <p class="text-sm text-gray-500 dark:text-gray-400 mb-1 transition-colors duration-300">Email Address</p>
-                                <a href="mailto:info@techohr.com" class="font-medium text-lg hover:text-blue-600 dark:hover:text-primary transition duration-300">info@techohr.com</a>
-                                <p class="text-sm text-gray-500 mt-1 transition-colors duration-300">support@techohr.com</p>
+                                {% if site_settings.email_primary %}
+                                <a href="mailto:{{ site_settings.email_primary }}" class="font-medium text-lg hover:text-blue-600 dark:hover:text-primary transition duration-300">{{ site_settings.email_primary }}</a>
+                                {% endif %}
+                                {% if site_settings.email_support %}
+                                <p class="text-sm text-gray-500 mt-1 transition-colors duration-300">{{ site_settings.email_support }}</p>
+                                {% endif %}
                             </div>
                         </div>
                         
@@ -55,7 +59,7 @@
                             </div>
                             <div class="ml-6">
                                 <p class="text-sm text-gray-500 dark:text-gray-400 mb-1 transition-colors duration-300">Phone Number</p>
-                                <a href="tel:+2347012345678" class="font-medium text-lg hover:text-blue-600 dark:hover:text-primary transition duration-300">+234 701 234 5678</a>
+                                <a href="tel:{{ site_settings.phone_primary|default:'+2347012345678' }}" class="font-medium text-lg hover:text-blue-600 dark:hover:text-primary transition duration-300">{{ site_settings.phone_primary|default:'+234 701 234 5678' }}</a>
                                 <p class="text-sm text-gray-500 mt-1 transition-colors duration-300">Mon - Fri, 9am - 6pm</p>
                             </div>
                         </div>
@@ -65,10 +69,18 @@
                 <div class="mt-12">
                     <p class="text-sm text-gray-500 dark:text-gray-400 mb-4 transition-colors duration-300">Follow us on social media</p>
                     <div class="flex space-x-4">
-                        <a href="#" class="w-10 h-10 rounded-full bg-white dark:bg-gray-800 flex items-center justify-center text-gray-400 hover:bg-blue-600 dark:hover:bg-primary hover:text-white transition shadow-sm"><i class="fab fa-facebook-f"></i></a>
-                        <a href="#" class="w-10 h-10 rounded-full bg-white dark:bg-gray-800 flex items-center justify-center text-gray-400 hover:bg-blue-600 dark:hover:bg-primary hover:text-white transition shadow-sm"><i class="fab fa-twitter"></i></a>
-                        <a href="#" class="w-10 h-10 rounded-full bg-white dark:bg-gray-800 flex items-center justify-center text-gray-400 hover:bg-blue-600 dark:hover:bg-primary hover:text-white transition shadow-sm"><i class="fab fa-linkedin-in"></i></a>
-                        <a href="#" class="w-10 h-10 rounded-full bg-white dark:bg-gray-800 flex items-center justify-center text-gray-400 hover:bg-blue-600 dark:hover:bg-primary hover:text-white transition shadow-sm"><i class="fab fa-instagram"></i></a>
+                        {% if site_settings.facebook_url %}
+                        <a href="{{ site_settings.facebook_url }}" class="w-10 h-10 rounded-full bg-white dark:bg-gray-800 flex items-center justify-center text-gray-400 hover:bg-blue-600 dark:hover:bg-primary hover:text-white transition shadow-sm"><i class="fab fa-facebook-f"></i></a>
+                        {% endif %}
+                        {% if site_settings.twitter_url %}
+                        <a href="{{ site_settings.twitter_url }}" class="w-10 h-10 rounded-full bg-white dark:bg-gray-800 flex items-center justify-center text-gray-400 hover:bg-blue-600 dark:hover:bg-primary hover:text-white transition shadow-sm"><i class="fab fa-twitter"></i></a>
+                        {% endif %}
+                        {% if site_settings.linkedin_url %}
+                        <a href="{{ site_settings.linkedin_url }}" class="w-10 h-10 rounded-full bg-white dark:bg-gray-800 flex items-center justify-center text-gray-400 hover:bg-blue-600 dark:hover:bg-primary hover:text-white transition shadow-sm"><i class="fab fa-linkedin-in"></i></a>
+                        {% endif %}
+                        {% if site_settings.instagram_url %}
+                        <a href="{{ site_settings.instagram_url }}" class="w-10 h-10 rounded-full bg-white dark:bg-gray-800 flex items-center justify-center text-gray-400 hover:bg-blue-600 dark:hover:bg-primary hover:text-white transition shadow-sm"><i class="fab fa-instagram"></i></a>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -123,19 +135,17 @@
 <section class="bg-gray-50 dark:bg-[#0B0F19] pb-20 transition-colors duration-300 animate-fade-in-up">
     <div class="container mx-auto px-4">
         <div class="max-w-6xl mx-auto bg-white dark:bg-gray-800 rounded-2xl overflow-hidden shadow-md h-96 relative border border-gray-200 dark:border-gray-700 transition-colors duration-300">
-            <!-- Placeholder for Map - In a real app, embed Google Maps iframe here -->
+            {% if site_settings.map_embed_url %}
+            <iframe src="{{ site_settings.map_embed_url }}" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+            {% else %}
             <div class="absolute inset-0 bg-gray-100 dark:bg-gray-800 flex items-center justify-center transition-colors duration-300">
                 <div class="text-center">
                     <i class="fas fa-map-marked-alt text-6xl text-gray-300 dark:text-gray-600 mb-4 transition-colors duration-300"></i>
                     <p class="text-gray-500 dark:text-gray-400 font-medium transition-colors duration-300">Interactive Map Placeholder</p>
-                    <p class="text-sm text-gray-400 dark:text-gray-500 transition-colors duration-300">123 Tech Avenue, Lagos</p>
+                    <p class="text-sm text-gray-400 dark:text-gray-500 transition-colors duration-300">{{ site_settings.address|default:'123 Tech Avenue, Lagos' }}</p>
                 </div>
             </div>
-            <!-- Example Overlay Card -->
-            <div class="absolute top-8 left-8 bg-white dark:bg-gray-900 p-4 rounded-lg shadow-lg hidden md:block border border-gray-100 dark:border-gray-700 transition-colors duration-300">
-                <p class="font-bold text-gray-900 dark:text-white text-sm transition-colors duration-300">TechOhr Headquarters</p>
-                <p class="text-xs text-green-500 mt-1"><i class="fas fa-circle text-[8px] mr-1"></i> Open Now</p>
-            </div>
+            {% endif %}
         </div>
     </div>
 </section>

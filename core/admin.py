@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Service, Project, Testimonial, Contact, Newsletter
+from .models import Service, Project, Testimonial, Contact, Newsletter, SiteSettings, CompanyStats, Employee
 
 @admin.register(Service)
 class ServiceAdmin(admin.ModelAdmin):
@@ -30,3 +30,17 @@ class NewsletterAdmin(admin.ModelAdmin):
     list_display = ('email', 'subscribed_at', 'is_active')
     list_filter = ('is_active', 'subscribed_at')
     search_fields = ('email',)
+
+@admin.register(SiteSettings)
+class SiteSettingsAdmin(admin.ModelAdmin):
+    list_display = ('site_name', 'updated_at')
+
+@admin.register(CompanyStats)
+class CompanyStatsAdmin(admin.ModelAdmin):
+    list_display = ('projects_completed', 'happy_clients', 'team_members', 'experience_years', 'updated_at')
+
+@admin.register(Employee)
+class EmployeeAdmin(admin.ModelAdmin):
+    list_display = ('name', 'role', 'order')
+    list_editable = ('order',)
+    search_fields = ('name', 'role')

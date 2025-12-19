@@ -3,20 +3,46 @@
         <div class="flex justify-between items-center h-20">
             <!-- Logo -->
             <a href="{% url 'home' %}" class="flex items-center space-x-2 z-50 relative">
-                <span class="text-2xl font-bold tracking-wider">TECH</span>
-                <span class="text-primary text-2xl"><i class="fas fa-bolt"></i></span>
-                <span class="text-2xl font-bold tracking-wider">OHR</span>
+                {% if site_settings %}
+                    {% if site_settings.logo_light %}
+                        <img src="{{ site_settings.logo_light.url }}" alt="{{ site_settings.site_name }}" class="h-10 w-auto dark:hidden">
+                    {% endif %}
+                    {% if site_settings.logo_dark %}
+                        <img src="{{ site_settings.logo_dark.url }}" alt="{{ site_settings.site_name }}" class="h-10 w-auto hidden dark:block">
+                    {% endif %}
+                    {% if not site_settings.logo_light and not site_settings.logo_dark and site_settings.logo %}
+                        <img src="{{ site_settings.logo.url }}" alt="{{ site_settings.site_name }}" class="h-10 w-auto">
+                    {% endif %}
+                {% else %}
+                    <span class="text-2xl font-bold tracking-wider">TECH</span>
+                    <span class="text-primary text-2xl"><i class="fas fa-bolt"></i></span>
+                    <span class="text-2xl font-bold tracking-wider">OHR</span>
+                {% endif %}
             </a>
 
             <!-- Desktop Menu -->
-            <div class="hidden md:flex items-center space-x-8">
-                <a href="{% url 'home' %}" class="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary transition uppercase tracking-wide">Home</a>
-                <a href="{% url 'about' %}" class="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary transition uppercase tracking-wide">About Us</a>
-                <a href="{% url 'service_list' %}" class="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary transition uppercase tracking-wide">Services</a>
-                <a href="{% url 'course_list' %}" class="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary transition uppercase tracking-wide">Courses</a>
-                <a href="{% url 'post_list' %}" class="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary transition uppercase tracking-wide">Blog</a>
-                <a href="{% url 'portfolio' %}" class="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary transition uppercase tracking-wide">Portfolio</a>
-                <a href="{% url 'contact' %}" class="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary transition uppercase tracking-wide">Contact Us</a>
+            <div class="hidden md:flex items-center space-x-2">
+                <a href="{% url 'home' %}" class="px-3 py-2 rounded-md text-sm font-medium transition uppercase tracking-wide
+                    text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-primary
+                    {% if request.resolver_match.url_name == 'home' %} bg-gray-100 dark:bg-gray-800 {% endif %}">Home</a>
+                <a href="{% url 'about' %}" class="px-3 py-2 rounded-md text-sm font-medium transition uppercase tracking-wide
+                    text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-primary
+                    {% if request.resolver_match.url_name == 'about' %} bg-gray-100 dark:bg-gray-800 {% endif %}">About Us</a>
+                <a href="{% url 'service_list' %}" class="px-3 py-2 rounded-md text-sm font-medium transition uppercase tracking-wide
+                    text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-primary
+                    {% if request.resolver_match.url_name == 'service_list' %} bg-gray-100 dark:bg-gray-800 {% endif %}">Services</a>
+                <a href="{% url 'course_list' %}" class="px-3 py-2 rounded-md text-sm font-medium transition uppercase tracking-wide
+                    text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-primary
+                    {% if request.resolver_match.url_name == 'course_list' %} bg-gray-100 dark:bg-gray-800 {% endif %}">Courses</a>
+                <a href="{% url 'post_list' %}" class="px-3 py-2 rounded-md text-sm font-medium transition uppercase tracking-wide
+                    text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-primary
+                    {% if request.resolver_match.url_name == 'post_list' %} bg-gray-100 dark:bg-gray-800 {% endif %}">Blog</a>
+                <a href="{% url 'portfolio' %}" class="px-3 py-2 rounded-md text-sm font-medium transition uppercase tracking-wide
+                    text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-primary
+                    {% if request.resolver_match.url_name == 'portfolio' %} bg-gray-100 dark:bg-gray-800 {% endif %}">Portfolio</a>
+                <a href="{% url 'contact' %}" class="px-3 py-2 rounded-md text-sm font-medium transition uppercase tracking-wide
+                    text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-primary
+                    {% if request.resolver_match.url_name == 'contact' %} bg-gray-100 dark:bg-gray-800 {% endif %}">Contact Us</a>
             </div>
 
             <!-- CTA Button & Theme Toggle -->
@@ -31,7 +57,7 @@
 
                  {% if user.is_authenticated %}
                     <div x-data="{ open: false }" class="relative">
-                        <button @click="open = !open" class="flex items-center space-x-2 px-4 py-2 border border-gray-700 rounded-md font-semibold hover:bg-gray-800 transition text-white">
+                        <button @click="open = !open" class="flex items-center space-x-2 px-4 py-2 rounded-md font-semibold bg-gray-900 text-white hover:bg-gray-800 transition dark:bg-gray-900 dark:text-white">
                             <span>My Account</span>
                             <i class="fas fa-chevron-down text-xs transition-transform duration-300" :class="{'transform rotate-180': open}"></i>
                         </button>

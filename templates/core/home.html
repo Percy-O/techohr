@@ -169,7 +169,7 @@
 
                 <!-- Floating Experience Card -->
                 <div class="absolute -bottom-8 -right-8 z-20 bg-white dark:bg-[#1a2236] border border-gray-100 dark:border-white/10 p-6 rounded-2xl shadow-xl max-w-[200px] hidden md:block transition-colors duration-300">
-                    <div class="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 mb-1">10+</div>
+                    <div class="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 mb-1">3+</div>
                     <div class="text-sm text-gray-600 dark:text-gray-400 font-medium">Years of Driving Digital Excellence</div>
                 </div>
 
@@ -290,6 +290,31 @@
         </div>
     </div>
 </section>
+
+<!-- 5. Stats Overview -->
+<section class="py-20 bg-gray-900 dark:bg-[#0B0F19] text-white transition-colors duration-300 animate-fade-in-up">
+    <div class="container mx-auto px-4">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center divide-x divide-gray-700 dark:divide-gray-800">
+            <div>
+                <div class="text-4xl md:text-5xl font-bold text-blue-500 dark:text-primary mb-2">{{ company_stats.projects_completed|default:'50' }}+</div>
+                <p class="text-gray-400 text-sm uppercase tracking-wider">Projects Completed</p>
+            </div>
+            <div>
+                <div class="text-4xl md:text-5xl font-bold text-blue-500 dark:text-primary mb-2">{{ company_stats.happy_clients|default:'30' }}+</div>
+                <p class="text-gray-400 text-sm uppercase tracking-wider">Happy Clients</p>
+            </div>
+            <div>
+                <div class="text-4xl md:text-5xl font-bold text-blue-500 dark:text-primary mb-2">{{ company_stats.team_members|default:'15' }}+</div>
+                <p class="text-gray-400 text-sm uppercase tracking-wider">Team Members</p>
+            </div>
+            <div>
+                <div class="text-4xl md:text-5xl font-bold text-blue-500 dark:text-primary mb-2">{{ company_stats.experience_years|default:'3' }}+</div>
+                <p class="text-gray-400 text-sm uppercase tracking-wider">Years Experience</p>
+            </div>
+        </div>
+    </div>
+    </section>
+
 
 <!-- 5. Smart Solutions -->
 <section class="py-24 bg-white dark:bg-[#050B14] relative overflow-hidden transition-colors duration-300 animate-fade-in-up">
@@ -421,13 +446,13 @@
                     </h3>
                     
                     <p class="text-gray-600 dark:text-gray-400 text-sm mb-4 line-clamp-2 flex-grow transition-colors duration-300">
-                        {{ course.description }}
+                        {{ course.description|striptags|truncatewords:20 }}
                     </p>
 
                     <div class="flex items-center justify-between mt-auto pt-4 border-t border-gray-100 dark:border-gray-800">
                         <div class="font-bold text-xl text-gray-900 dark:text-white transition-colors duration-300">
                             {% if course.price > 0 %}
-                                ${{ course.price }}
+                                ₦{{ course.price|floatformat:0 }}
                             {% else %}
                                 Free
                             {% endif %}

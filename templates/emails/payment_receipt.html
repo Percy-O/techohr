@@ -1,0 +1,23 @@
+{% extends 'emails/base_email.html' %}
+
+{% block title %}Payment Receipt{% endblock %}
+
+{% block content %}
+<h2 style="color:#111827;margin-top:0;">Payment Successful</h2>
+<p>Hi {{ user.username }},</p>
+<p>Thank you for your payment. You are now enrolled in <span class="highlight">{{ course.title }}</span>.</p>
+
+<div style="background-color:#f3f4f6;padding:16px;border-radius:6px;margin:24px 0;">
+    <p style="margin:0 0 8px 0;"><strong>Course:</strong> {{ course.title }}</p>
+    <p style="margin:0 0 8px 0;"><strong>Amount:</strong> ₦{{ amount_naira|floatformat:2 }}</p>
+    <p style="margin:0 0 8px 0;"><strong>Reference:</strong> {{ reference }}</p>
+    <p style="margin:0 0 8px 0;"><strong>Status:</strong> {{ status|title }}</p>
+    <p style="margin:0 0 8px 0;"><strong>Date:</strong> {{ paid_at|date:"F j, Y, g:i a" }}</p>
+    <p style="margin:16px 0 0 0;">You can start learning right away.</p>
+</div>
+
+<center>
+    <a href="{{ start_url }}" class="button">Go to Course</a>
+    
+</center>
+{% endblock %}

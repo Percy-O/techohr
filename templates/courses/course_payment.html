@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="bg-gray-50 dark:bg-[#050B14] min-h-screen">
+    <div class="container mx-auto px-4 py-12">
+        <div class="max-w-2xl mx-auto bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-8">
+            <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">Course Payment</h1>
+            <p class="text-gray-600 dark:text-gray-400 mb-6">You are paying for <span class="font-semibold text-gray-900 dark:text-white">{{ course.title }}</span>.</p>
+
+            <div class="flex items-center justify-between bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 mb-6">
+                <span class="text-gray-600 dark:text-gray-300">Amount</span>
+                <span class="text-2xl font-bold text-gray-900 dark:text-white">₦{{ amount_naira|floatformat:0 }}</span>
+            </div>
+
+            {% if not keys_ready %}
+            <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 mb-6 text-sm text-yellow-800 dark:text-yellow-200">
+                Paystack keys are not configured. Please set `PAYSTACK_PUBLIC_KEY` and `PAYSTACK_SECRET_KEY` and reload.
+            </div>
+            {% endif %}
+            
+            {% if keys_ready and public_key %}
+            <button id="paystackPopupBtn" class="block w-full text-center mt-4 px-6 py-3 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 transition">Pay with Card (Popup)</button>
+            <script src="https://js.paystack.co/v1/inline.js"></script>
+            <script>
+                document.getElementById('paystackPopupBtn')?.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    var handler = PaystackPop.setup({
+                        key: '{{ public_key }}',
+                        email: '{{ user.email|default:"noemail@techohr.com.ng" }}',
+                        amount: {{ amount_naira|floatformat:0 }} * 100,
+                        currency: 'NGN',
+                        callback: function(response){
+                            var ref = response.reference;
+                            window.location.href = '{% url "verify_course_payment" course.slug %}?reference=' + encodeURIComponent(ref);
+                        },
+                        onClose: function(){
+                            // Optional: show a message or keep silent
+                        }
+                    });
+                    handler.openIframe();
+                });
+            </script>
+            {% endif %}
+
+            <a href="{% url 'course_detail' course.slug %}" class="block w-full text-center mt-4 px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition">Cancel</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

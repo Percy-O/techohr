@@ -158,6 +158,18 @@ class LessonCompletion(models.Model):
     class Meta:
         unique_together = ('enrollment', 'lesson')
 
+class Payment(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    course = models.ForeignKey(Course, on_delete=models.CASCADE)
+    reference = models.CharField(max_length=100, unique=True)
+    amount = models.IntegerField()
+    status = models.CharField(max_length=20)
+    paid_at = models.DateTimeField(auto_now_add=True)
+    raw = models.JSONField(default=dict)
+
+    def __str__(self):
+        return f"{self.user} - {self.course} - {self.reference}"
+
 class Certificate(models.Model):
     student = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='certificates', on_delete=models.CASCADE)
     course = models.ForeignKey(Course, related_name='certificates', on_delete=models.CASCADE)

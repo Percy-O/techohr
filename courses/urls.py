@@ -35,6 +35,7 @@ urlpatterns = [
     path('manage/questions/<int:pk>/choices/', views.manage_question_choices, name='manage_question_choices'),
     path('manage/assessments/<int:pk>/submissions/', views.manage_submissions, name='manage_submissions'),
     path('manage/submissions/<int:pk>/grade/', views.grade_submission, name='grade_submission'),
+    path('manage/payments/', views.manage_payments, name='manage_payments'),
     
     # Taking Assessments
     path('assessment/<int:pk>/submit/', views.submit_assessment, name='submit_assessment'),
@@ -44,6 +45,9 @@ urlpatterns = [
     path('certificate/<str:certificate_id>/download/', views.download_certificate, name='download_certificate'),
 
     # Public Course URLs (Must be last to avoid conflict with 'manage/')
+    path('<slug:slug>/pay/', views.course_payment, name='course_payment'),
+    path('<slug:slug>/pay/init/', views.init_course_payment, name='init_course_payment'),
+    path('<slug:slug>/pay/verify/', views.verify_course_payment, name='verify_course_payment'),
     path('<slug:slug>/enroll/', views.enroll_course, name='enroll_course'),
     path('<slug:slug>/review/', views.add_review, name='add_review'),
     path('<slug:slug>/', views.course_detail, name='course_detail'),

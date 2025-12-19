@@ -7,13 +7,23 @@ from django.contrib import messages
 from django.utils import timezone
 from django.utils.text import slugify
 from django.http import JsonResponse, HttpResponse, FileResponse
-from django.template.loader import get_template
+from django.template.loader import get_template, render_to_string
+from django.utils.html import strip_tags
+from django.core.mail import send_mail
 from django.conf import settings as django_settings
+from django.http import HttpResponse
+from urllib.error import HTTPError, URLError
+from django.urls import reverse
+from core.models import SiteSettings
+from .models import Payment
 import uuid
 from fpdf import FPDF
 import io
 import os
 from PIL import Image, ImageDraw, ImageEnhance # Import PIL
+import json
+from urllib import request as urlrequest, parse as urlparse
+import time
 
 try:
     import barcode
@@ -206,6 +216,17 @@ def manage_submissions(request, pk):
     return render(request, 'courses/manage_submissions.html', {'assessment': assessment, 'submissions': submissions})
 
 @staff_required
+def manage_payments(request):
+    payments = Payment.objects.all().order_by('-paid_at')
+    status = request.GET.get('status')
+    if status:
+        payments = payments.filter(status=status)
+    query = request.GET.get('q')
+    if query:
+        payments = payments.filter(reference__icontains=query)
+    return render(request, 'courses/manage_payments.html', {'payments': payments})
+
+@staff_required
 def grade_submission(request, pk):
     submission = get_object_or_404(Submission, pk=pk)
     if request.method == 'POST':
@@ -248,7 +269,8 @@ def manage_certificate_settings(request):
 
 def course_list(request):
     courses = Course.objects.filter(is_published=True)
-    return render(request, 'courses/course_list.html', {'courses': courses})
+    categories = Category.objects.all().order_by('name')
+    return render(request, 'courses/course_list.html', {'courses': courses, 'categories': categories})
 
 def course_detail(request, slug):
     course = get_object_or_404(
@@ -342,9 +364,181 @@ def course_detail(request, slug):
     })
 
 @login_required
+def init_course_payment(request, slug):
+    course = get_object_or_404(Course, slug=slug, is_published=True)
+    if course.price <= 0:
+        return redirect('enroll_course', slug=slug)
+
+    if not django_settings.PAYSTACK_SECRET_KEY or django_settings.PAYSTACK_SECRET_KEY == 'PAYSTACK_SECRET_KEY':
+        messages.error(request, 'Payment not configured. Please set PAYSTACK keys.')
+        return redirect('course_payment', slug=slug)
+
+    # Ensure positive integer amount in kobo
+    amount_kobo = int(max(float(course.price), 0) * 100)
+    if amount_kobo <= 0:
+        messages.error(request, 'Invalid course amount. Please contact support.')
+        return redirect('course_payment', slug=slug)
+    callback_url = request.build_absolute_uri(
+        reverse('verify_course_payment', kwargs={'slug': slug})
+    )
+    payload = {
+        'email': request.user.email or 'noemail@techohr.com.ng',
+        'amount': amount_kobo,
+        'currency': 'NGN',
+        'callback_url': callback_url,
+        'metadata': {
+            'course_slug': slug,
+            'user_id': request.user.id,
+            'username': request.user.username,
+        }
+    }
+    data = json.dumps(payload).encode('utf-8')
+    req = urlrequest.Request(
+        'https://api.paystack.co/transaction/initialize',
+        data=data,
+        headers={
+            'Content-Type': 'application/json',
+            'Authorization': f"Bearer {django_settings.PAYSTACK_SECRET_KEY}"
+        },
+        method='POST'
+    )
+    try:
+        with urlrequest.urlopen(req) as resp:
+            body = resp.read().decode('utf-8')
+            res = json.loads(body)
+            if res.get('status') and res.get('data', {}).get('authorization_url'):
+                return render(request, 'courses/payment_init.html', {
+                    'course': course,
+                    'authorization_url': res['data']['authorization_url'],
+                    'amount_naira': float(course.price),
+                })
+            # Show Paystack error message if available
+            err_msg = res.get('message') or 'Unable to initialize payment. Please try again.'
+            messages.error(request, err_msg)
+    except HTTPError as e:
+        try:
+            err_body = e.read().decode('utf-8')
+            err_json = json.loads(err_body)
+            err_msg = err_json.get('message') or 'Payment initialization failed.'
+            messages.error(request, err_msg)
+        except Exception:
+            messages.error(request, 'Payment initialization failed. Please try again later.')
+        return redirect('course_payment', slug=slug)
+    except URLError:
+        messages.error(request, 'Network error contacting Paystack. Check your internet and try again.')
+        return redirect('course_payment', slug=slug)
+    except Exception:
+        messages.error(request, 'Payment initialization failed. Please try again later.')
+        return redirect('course_payment', slug=slug)
+    return redirect('course_payment', slug=slug)
+
+@login_required
+def verify_course_payment(request, slug):
+    course = get_object_or_404(Course, slug=slug, is_published=True)
+    reference = request.GET.get('reference')
+    if not reference:
+        messages.error(request, 'Payment verification failed: missing reference.')
+        return redirect('course_detail', slug=slug)
+    # Retry verification a few times to allow Paystack to finalize the transaction
+    attempts = 3
+    last_error_message = None
+    for i in range(attempts):
+        verify_req = urlrequest.Request(
+            f'https://api.paystack.co/transaction/verify/{urlparse.quote(reference)}',
+            headers={'Authorization': f"Bearer {django_settings.PAYSTACK_SECRET_KEY}"},
+            method='GET'
+        )
+        try:
+            with urlrequest.urlopen(verify_req) as resp:
+                body = resp.read().decode('utf-8')
+                res = json.loads(body)
+                data = res.get('data') or {}
+                if res.get('status') and data.get('status') == 'success':
+                    try:
+                        Payment.objects.get_or_create(
+                            reference=data.get('reference') or reference or '',
+                            defaults={
+                                'user': request.user,
+                                'course': course,
+                                'amount': data.get('amount') or 0,
+                                'status': data.get('status') or 'success',
+                                'raw': data,
+                            }
+                        )
+                    except Exception:
+                        pass
+                    if not Enrollment.objects.filter(student=request.user, course=course).exists():
+                        Enrollment.objects.create(student=request.user, course=course)
+                    try:
+                        site_settings = SiteSettings.objects.first()
+                        amount_naira = (data.get('amount') or 0) / 100.0
+                        receipt_html = render_to_string('emails/payment_receipt.html', {
+                            'user': request.user,
+                            'course': course,
+                            'reference': data.get('reference') or reference,
+                            'amount_naira': amount_naira,
+                            'status': data.get('status'),
+                            'paid_at': data.get('paid_at') or timezone.now(),
+                            'start_url': request.build_absolute_uri(reverse('course_detail', kwargs={'slug': slug})),
+                            'site_settings': site_settings,
+                        })
+                        receipt_plain = strip_tags(receipt_html)
+                        send_mail(
+                            subject=f'Payment Receipt - {course.title}',
+                            message=receipt_plain,
+                            from_email=django_settings.DEFAULT_FROM_EMAIL,
+                            recipient_list=[request.user.email],
+                            html_message=receipt_html,
+                            fail_silently=True,
+                        )
+                    except Exception:
+                        pass
+                    messages.success(request, f'Payment successful. You are now enrolled in {course.title}.')
+                    first_module = course.modules.first()
+                    if first_module:
+                        first_lesson = first_module.lessons.first()
+                        if first_lesson:
+                            return redirect('lesson_detail', course_slug=course.slug, lesson_slug=first_lesson.slug)
+                    return redirect('course_detail', slug=slug)
+                # Record message and retry if status not success
+                last_error_message = res.get('message') or (data.get('gateway_response') if isinstance(data, dict) else None) or 'Payment not successful or pending.'
+        except HTTPError as e:
+            try:
+                err_body = e.read().decode('utf-8')
+                err_json = json.loads(err_body)
+                last_error_message = err_json.get('message') or 'Payment verification error.'
+            except Exception:
+                last_error_message = 'Payment verification error.'
+        except URLError:
+            last_error_message = 'Network error contacting Paystack during verification.'
+        except Exception:
+            last_error_message = 'Payment verification failed due to an unexpected error.'
+        # Wait before next attempt
+        time.sleep(1)
+    messages.error(request, last_error_message or 'Payment verification failed. Please contact support.')
+    return redirect('course_detail', slug=slug)
+
+@login_required
 def enroll_course(request, slug):
     course = get_object_or_404(Course, slug=slug)
-    
+    # For paid courses, force payment before enrollment
+    if course.price and float(course.price) > 0:
+        messages.info(request, 'Please complete payment to access this course.')
+        return redirect('course_payment', slug=slug)
+
+@login_required
+def course_payment(request, slug):
+    course = get_object_or_404(Course, slug=slug, is_published=True)
+    if course.price <= 0:
+        return redirect('enroll_course', slug=slug)
+    keys_ready = bool(django_settings.PAYSTACK_PUBLIC_KEY and django_settings.PAYSTACK_PUBLIC_KEY != 'PAYSTACK_PUBLIC_KEY' and django_settings.PAYSTACK_SECRET_KEY and django_settings.PAYSTACK_SECRET_KEY != 'PAYSTACK_SECRET_KEY')
+    return render(request, 'courses/course_payment.html', {
+        'course': course,
+        'amount_naira': float(course.price),
+        'keys_ready': keys_ready,
+        'public_key': django_settings.PAYSTACK_PUBLIC_KEY if keys_ready else '',
+    })
+
     # Check if already enrolled
     if not Enrollment.objects.filter(student=request.user, course=course).exists():
         Enrollment.objects.create(student=request.user, course=course)
@@ -564,7 +758,12 @@ def lesson_detail(request, course_slug, lesson_slug):
     lesson = get_object_or_404(Lesson, module__course=course, slug=lesson_slug)
     
     enrollment = Enrollment.objects.filter(student=request.user, course=course).first()
-    if not enrollment and not lesson.is_free:
+    # Require payment/enrollment for paid courses, regardless of free flag
+    if (course.price and float(course.price) > 0) and not enrollment:
+        messages.error(request, 'Please pay for the course to access lessons.')
+        return redirect('course_detail', slug=course_slug)
+    # For free courses, still require enrollment unless lesson is marked free
+    if not enrollment and not (course.price and float(course.price) <= 0 and lesson.is_free):
         messages.error(request, 'You must be enrolled to view this lesson.')
         return redirect('course_detail', slug=course_slug)
 

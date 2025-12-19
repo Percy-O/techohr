@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="bg-gray-50 dark:bg-[#050B14] min-h-screen">
+    <div class="container mx-auto px-4 py-12">
+        <div class="max-w-2xl mx-auto bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-8">
+            <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">Confirm Payment</h1>
+            <p class="text-gray-600 dark:text-gray-400 mb-6">You are about to pay for <span class="font-semibold text-gray-900 dark:text-white">{{ course.title }}</span>.</p>
+
+            <div class="flex items-center justify-between bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 mb-6">
+                <span class="text-gray-600 dark:text-gray-300">Amount</span>
+                <span class="text-2xl font-bold text-gray-900 dark:text-white">₦{{ amount_naira|floatformat:0 }}</span>
+            </div>
+
+            <div class="space-y-3 mb-8 text-sm text-gray-600 dark:text-gray-400">
+                <div class="flex items-center"><i class="fas fa-shield-alt text-green-500 mr-2"></i> Secure payment powered by Paystack</div>
+                <div class="flex items-center"><i class="fas fa-check-circle text-blue-500 mr-2"></i> Enrollment will be activated after successful payment</div>
+            </div>
+
+            <a href="{{ authorization_url }}" class="block w-full text-center px-6 py-3 bg-primary text-white font-bold rounded-lg hover:bg-blue-600 transition">Pay Now</a>
+
+            <a href="{% url 'course_detail' course.slug %}" class="block w-full text-center mt-4 px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition">Cancel</a>
+        </div>
+    </div>
+}</div>
+{% endblock %}

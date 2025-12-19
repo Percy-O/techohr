@@ -35,9 +35,9 @@
         <!-- Filter Buttons -->
         <div class="flex flex-wrap justify-center gap-4 mb-16">
             <button class="px-6 py-2 rounded-full bg-primary text-white font-semibold shadow-lg hover:bg-blue-700 transition">All Projects</button>
-            <button class="px-6 py-2 rounded-full bg-white dark:bg-[#111827] text-gray-600 dark:text-gray-300 font-semibold border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-primary dark:hover:text-blue-400 transition-colors duration-300">Web Development</button>
-            <button class="px-6 py-2 rounded-full bg-white dark:bg-[#111827] text-gray-600 dark:text-gray-300 font-semibold border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-primary dark:hover:text-blue-400 transition-colors duration-300">Mobile Apps</button>
-            <button class="px-6 py-2 rounded-full bg-white dark:bg-[#111827] text-gray-600 dark:text-gray-300 font-semibold border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-primary dark:hover:text-blue-400 transition-colors duration-300">AI Solutions</button>
+            {% for tag in project_tags %}
+            <button class="px-6 py-2 rounded-full bg-white dark:bg-[#111827] text-gray-600 dark:text-gray-300 font-semibold border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-primary dark:hover:text-blue-400 transition-colors duration-300">{{ tag }}</button>
+            {% endfor %}
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

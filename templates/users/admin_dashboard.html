@@ -32,7 +32,10 @@
         <div>
             <div class="text-gray-500 dark:text-gray-400 text-xs font-bold uppercase tracking-wider mb-1">Total Users</div>
             <div class="text-2xl font-bold text-gray-800 dark:text-white">{{ total_users }}</div>
-            <div class="text-xs text-green-500 font-medium mt-1"><i class="fas fa-arrow-up mr-1"></i> 12% increase</div>
+            <div class="text-xs font-medium mt-1 {% if users_week_change >= 0 %}text-green-500{% else %}text-red-500{% endif %}">
+                <i class="fas {% if users_week_change >= 0 %}fa-arrow-up{% else %}fa-arrow-down{% endif %} mr-1"></i>
+                {{ users_week_change|default:'0' }}% {% if users_week_change >= 0 %}increase{% else %}decrease{% endif %}
+            </div>
         </div>
     </div>
     
@@ -44,7 +47,7 @@
         <div>
             <div class="text-gray-500 dark:text-gray-400 text-xs font-bold uppercase tracking-wider mb-1">Projects</div>
             <div class="text-2xl font-bold text-gray-800 dark:text-white">{{ total_projects }}</div>
-            <div class="text-xs text-green-500 font-medium mt-1"><i class="fas fa-arrow-up mr-1"></i> 3 new this week</div>
+            <div class="text-xs text-green-500 font-medium mt-1"><i class="fas fa-arrow-up mr-1"></i> {{ projects_week_new|default:'0' }} new this week</div>
         </div>
     </div>
     
@@ -56,7 +59,7 @@
         <div>
             <div class="text-gray-500 dark:text-gray-400 text-xs font-bold uppercase tracking-wider mb-1">Courses</div>
             <div class="text-2xl font-bold text-gray-800 dark:text-white">{{ total_courses }}</div>
-            <div class="text-xs text-gray-400 font-medium mt-1">Stable</div>
+            <div class="text-xs text-green-500 font-medium mt-1"><i class="fas fa-arrow-up mr-1"></i> {{ courses_week_new|default:'0' }} new this week</div>
         </div>
     </div>
     
@@ -68,7 +71,7 @@
         <div>
             <div class="text-gray-500 dark:text-gray-400 text-xs font-bold uppercase tracking-wider mb-1">Blog Posts</div>
             <div class="text-2xl font-bold text-gray-800 dark:text-white">{{ total_posts }}</div>
-            <div class="text-xs text-green-500 font-medium mt-1"><i class="fas fa-arrow-up mr-1"></i> 5 new drafts</div>
+            <div class="text-xs text-green-500 font-medium mt-1"><i class="fas fa-arrow-up mr-1"></i> {{ posts_week_new|default:'0' }} new this week</div>
         </div>
     </div>
 </div>
@@ -108,15 +111,39 @@
             <div class="text-2xl font-bold text-gray-800 dark:text-white">{{ total_courses }}</div>
         </div>
     </div>
+
+    <a href="{% url 'create_admin_user' %}" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 flex items-center hover:shadow-md dark:hover:shadow-gray-700/30 transition">
+        <div class="w-12 h-12 rounded-full bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-300 mr-4">
+            <i class="fas fa-user-shield text-xl"></i>
+        </div>
+        <div>
+            <div class="text-gray-500 dark:text-gray-400 text-xs font-bold uppercase tracking-wider mb-1">Add Admin</div>
+            <div class="text-sm font-bold text-gray-800 dark:text-white">Create a new admin user</div>
+        </div>
+    </a>
+    <a href="{% url 'manage_payments' %}" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 flex items-center hover:shadow-md dark:hover:shadow-gray-700/30 transition">
+        <div class="w-12 h-12 rounded-full bg-green-50 dark:bg-green-900/30 flex items-center justify-center text-green-600 dark:text-green-300 mr-4">
+            <i class="fas fa-credit-card text-xl"></i>
+        </div>
+        <div>
+            <div class="text-gray-500 dark:text-gray-400 text-xs font-bold uppercase tracking-wider mb-1">Manage Payments</div>
+            <div class="text-sm font-bold text-gray-800 dark:text-white">View and process payments</div>
+        </div>
+    </a>
 </div>
 
 <!-- Charts Section -->
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-    <!-- Main Chart -->
+    <!-- Main Chart (Page Visits) -->
     <div class="lg:col-span-2 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
         <div class="flex justify-between items-center mb-6">
-            <h3 class="text-lg font-bold text-gray-800 dark:text-white">Visitor Trends</h3>
-            <button class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"><i class="fas fa-ellipsis-h"></i></button>
+            <h3 class="text-lg font-bold text-gray-800 dark:text-white">Page Visits Trend</h3>
+            <select onchange="window.location.href='?trend_type='+this.value" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 text-sm rounded-lg focus:ring-primary focus:border-primary block p-2">
+                <option value="daily" {% if current_trend_type == 'daily' %}selected{% endif %}>Daily</option>
+                <option value="weekly" {% if current_trend_type == 'weekly' %}selected{% endif %}>Weekly</option>
+                <option value="monthly" {% if current_trend_type == 'monthly' %}selected{% endif %}>Monthly</option>
+                <option value="yearly" {% if current_trend_type == 'yearly' %}selected{% endif %}>Yearly</option>
+            </select>
         </div>
         <div class="h-80 w-full">
             <canvas id="visitorChart"></canvas>
@@ -295,15 +322,15 @@
     const gridColor = isDark ? '#374151' : '#E5E7EB';
     const textColor = isDark ? '#9CA3AF' : '#4B5563';
 
-    // Visitor Chart
+    // Page Visits Trend Chart
     const ctx = document.getElementById('visitorChart').getContext('2d');
     new Chart(ctx, {
         type: 'line',
         data: {
-            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+            labels: {{ visit_trend_labels|safe }},
             datasets: [{
-                label: 'Unique Visitors',
-                data: [120, 190, 300, 250, 200, 350, 400],
+                label: 'Page Visits',
+                data: {{ visit_trend_values|safe }},
                 borderColor: '#0066FF',
                 backgroundColor: 'rgba(0, 102, 255, 0.1)',
                 tension: 0.4,

@@ -10,6 +10,7 @@ urlpatterns = [
     path('portfolio/', views.portfolio, name='portfolio'),
     path('portfolio/<slug:slug>/', views.project_detail, name='project_detail'),
     path('subscribe/', views.subscribe, name='subscribe'),
+    path('reviews/new/', views.submit_review, name='submit_review'),
     
     # Management URLs
     path('manage/projects/', views.manage_projects, name='manage_projects'),
@@ -25,4 +26,11 @@ urlpatterns = [
     path('manage/testimonials/create/', views.create_testimonial, name='create_testimonial'),
     path('manage/testimonials/<int:pk>/edit/', views.edit_testimonial, name='edit_testimonial'),
     path('manage/testimonials/<int:pk>/delete/', views.delete_testimonial, name='delete_testimonial'),
+
+    # Settings & Team Management URLs
+    path('manage/settings/', views.manage_settings, name='manage_settings'),
+    path('manage/employees/', views.manage_employees, name='manage_employees'),
+    path('manage/employees/create/', views.create_employee, name='create_employee'),
+    path('manage/employees/<int:pk>/edit/', views.edit_employee, name='edit_employee'),
+    path('manage/employees/<int:pk>/delete/', views.delete_employee, name='delete_employee'),
 ]

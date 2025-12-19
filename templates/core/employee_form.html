@@ -1,0 +1,84 @@
+{% extends 'layouts/admin_base.html' %}
+
+{% block admin_content %}
+<div class="w-full max-w-3xl">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-white">{{ title }}</h1>
+        <a href="{% url 'manage_employees' %}" class="px-4 py-2 text-sm bg-gray-900 dark:bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition">
+            <i class="fas fa-arrow-left mr-2"></i> Back
+        </a>
+    </div>
+
+    <div class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+        <form method="post" enctype="multipart/form-data" class="space-y-4">
+            {% csrf_token %}
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Name</label>
+                {{ form.name }}
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Role</label>
+                {{ form.role }}
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Photo</label>
+                <div class="mt-1 flex items-center gap-4">
+                    <div class="w-24 h-24 sm:w-28 sm:h-28 rounded-full overflow-hidden border border-gray-200 dark:border-gray-700 bg-white/60 dark:bg-gray-900/40 backdrop-blur-sm flex items-center justify-center ring-1 ring-blue-500/10 hover:ring-blue-500/30 transition transform hover:scale-105">
+                        {% if form.instance.photo %}
+                        <img id="photoPreview" src="{{ form.instance.photo.url }}" alt="Preview" class="w-full h-full object-cover">
+                        {% else %}
+                        <img id="photoPreview" src="" alt="Preview" class="w-full h-full object-cover hidden">
+                        {% endif %}
+                    </div>
+                    {{ form.photo }}
+                    <label for="{{ form.photo.id_for_label }}" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 dark:bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                        <i class="fas fa-upload"></i>
+                        Upload Photo
+                    </label>
+                </div>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">PNG, JPG up to 2MB. Square images look best.</p>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">LinkedIn</label>
+                    {{ form.linkedin_url }}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Twitter</label>
+                    {{ form.twitter_url }}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">GitHub</label>
+                    {{ form.github_url }}
+                </div>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Display Order</label>
+                {{ form.order }}
+            </div>
+
+            <div class="pt-4">
+                <button type="submit" class="px-6 py-3 bg-primary text-white font-bold rounded-lg hover:bg-blue-600 transition shadow-lg">
+                    <i class="fas fa-save mr-2"></i> Save
+                </button>
+            </div>
+        </form>
+    </div>
+    <script>
+        const fileInput = document.getElementById('{{ form.photo.id_for_label }}');
+        const previewImg = document.getElementById('photoPreview');
+        if (fileInput) {
+            fileInput.addEventListener('change', function(e) {
+                const file = e.target.files && e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    previewImg.src = evt.target.result;
+                    previewImg.classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+    </script>
+</div>
+{% endblock %}

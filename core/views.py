@@ -5,7 +5,7 @@ from courses.models import Course, Enrollment
 from django.contrib import messages
 from django.views.decorators.http import require_POST
 from users.decorators import staff_required
-from .forms import ProjectForm, TestimonialForm
+from .forms import ProjectForm, TestimonialForm, SiteSettingsForm, EmployeeForm, CompanyStatsForm
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
@@ -54,12 +54,14 @@ def contact(request):
         # Send Email Notification
         try:
             dashboard_url = request.build_absolute_uri(reverse('manage_messages'))
+            from core.models import SiteSettings
             html_message = render_to_string('emails/contact_notification.html', {
                 'name': name,
                 'email': email,
                 'subject': subject,
                 'message': message,
-                'dashboard_url': dashboard_url
+                'dashboard_url': dashboard_url,
+                'site_settings': SiteSettings.objects.first(),
             })
             plain_message = strip_tags(html_message)
             
@@ -81,7 +83,9 @@ def contact(request):
     return render(request, 'core/contact.html')
 
 def about(request):
-    return render(request, 'core/about.html')
+    from .models import Employee
+    employees = Employee.objects.all()
+    return render(request, 'core/about.html', {'employees': employees})
 
 @require_POST
 def subscribe(request):
@@ -99,11 +103,19 @@ def subscribe(request):
 
 def portfolio(request):
     projects = Project.objects.all().order_by('-created_at')
-    return render(request, 'core/portfolio.html', {'projects': projects})
+    # Build dynamic filter tags from technologies
+    tags = set()
+    for p in projects:
+        if p.technologies:
+            for t in [s.strip() for s in p.technologies.split(',') if s.strip()]:
+                tags.add(t)
+    project_tags = sorted(tags)
+    return render(request, 'core/portfolio.html', {'projects': projects, 'project_tags': project_tags})
 
 def project_detail(request, slug):
     project = get_object_or_404(Project, slug=slug)
-    return render(request, 'core/project_detail.html', {'project': project})
+    project_testimonials = Testimonial.objects.filter(project=project).order_by('-id')
+    return render(request, 'core/project_detail.html', {'project': project, 'project_testimonials': project_testimonials})
 
 # --- Management Views ---
 
@@ -203,3 +215,118 @@ def delete_testimonial(request, pk):
     testimonial.delete()
     messages.success(request, 'Testimonial deleted successfully!')
     return redirect('manage_testimonials')
+
+# --- Site Settings & Employees Management ---
+
+@staff_required
+def manage_settings(request):
+    from .models import SiteSettings, CompanyStats
+    settings_obj = SiteSettings.objects.first()
+    stats_obj = CompanyStats.objects.first()
+    if request.method == 'POST':
+        settings_form = SiteSettingsForm(request.POST, request.FILES, instance=settings_obj)
+        stats_form = CompanyStatsForm(request.POST, instance=stats_obj)
+        if settings_form.is_valid() and stats_form.is_valid():
+            obj = settings_form.save()
+            if request.POST.get('logo_clear') == '1':
+                obj.logo = None
+            if request.POST.get('logo_light_clear') == '1':
+                obj.logo_light = None
+            if request.POST.get('logo_dark_clear') == '1':
+                obj.logo_dark = None
+            if request.POST.get('favicon_clear') == '1':
+                obj.favicon = None
+            obj.save()
+            stats_form.save()
+            messages.success(request, 'Settings updated successfully!')
+            return redirect('manage_settings')
+    else:
+        settings_form = SiteSettingsForm(instance=settings_obj)
+        stats_form = CompanyStatsForm(instance=stats_obj)
+    return render(request, 'core/manage_settings.html', {
+        'settings_form': settings_form,
+        'stats_form': stats_form,
+    })
+
+def dynamic_sitemap(request):
+    from django.contrib.sites.models import Site
+    from django.contrib.sitemaps.views import sitemap as django_sitemap
+    from core.sitemaps import StaticViewSitemap, ServiceSitemap, ProjectSitemap
+    from courses.sitemaps import CourseSitemap
+    from blog.sitemaps import PostSitemap
+    host = request.get_host().split(':')[0]
+    site, _ = Site.objects.get_or_create(id=settings.SITE_ID, defaults={'domain': host, 'name': 'TechOhr'})
+    if site.domain != host:
+        site.domain = host
+        site.save()
+    sitemaps = {
+        'static': StaticViewSitemap,
+        'services': ServiceSitemap,
+        'projects': ProjectSitemap,
+        'courses': CourseSitemap,
+        'posts': PostSitemap,
+    }
+    return django_sitemap(request, sitemaps)
+
+def submit_review(request):
+    if request.method == 'POST':
+        client_name = request.POST.get('client_name')
+        position = request.POST.get('position')
+        company = request.POST.get('company')
+        content = request.POST.get('content')
+        rating = int(request.POST.get('rating') or 5)
+        project_slug = request.POST.get('project_slug')
+        project = None
+        if project_slug:
+            project = Project.objects.filter(slug=project_slug).first()
+        t = Testimonial(client_name=client_name, position=position, company=company, content=content, rating=rating, project=project)
+        if request.FILES.get('image'):
+            t.image = request.FILES['image']
+        t.save()
+        messages.success(request, 'Thank you for your review!')
+        return redirect('home')
+    prefill = None
+    slug = request.GET.get('project')
+    if slug:
+        prefill = Project.objects.filter(slug=slug).first()
+    return render(request, 'core/review_submit.html', {'prefill_project': prefill})
+
+@staff_required
+def manage_employees(request):
+    from .models import Employee
+    employees = Employee.objects.all()
+    return render(request, 'core/manage_employees.html', {'employees': employees})
+
+@staff_required
+def create_employee(request):
+    if request.method == 'POST':
+        form = EmployeeForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Employee added successfully!')
+            return redirect('manage_employees')
+    else:
+        form = EmployeeForm()
+    return render(request, 'core/employee_form.html', {'form': form, 'title': 'Add Team'})
+
+@staff_required
+def edit_employee(request, pk):
+    from .models import Employee
+    employee = get_object_or_404(Employee, pk=pk)
+    if request.method == 'POST':
+        form = EmployeeForm(request.POST, request.FILES, instance=employee)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Employee updated successfully!')
+            return redirect('manage_employees')
+    else:
+        form = EmployeeForm(instance=employee)
+    return render(request, 'core/employee_form.html', {'form': form, 'title': 'Edit Team'})
+
+@staff_required
+def delete_employee(request, pk):
+    from .models import Employee
+    employee = get_object_or_404(Employee, pk=pk)
+    employee.delete()
+    messages.success(request, 'Employee deleted successfully!')
+    return redirect('manage_employees')

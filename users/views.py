@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib import messages
-from .forms import UserRegisterForm, ProfileForm
+from .forms import UserRegisterForm, ProfileForm, AdminCreationForm
 from django.contrib.auth.decorators import login_required
 from .decorators import staff_required
 from courses.models import Enrollment, Course, Certificate
@@ -17,6 +17,8 @@ from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from django.contrib.auth.tokens import default_token_generator
 from django.conf import settings
+from core.models import SiteSettings
+from core.models import PageVisit
 from django.urls import reverse
 
 User = get_user_model()
@@ -40,10 +42,12 @@ def register(request):
                 reverse('activate', kwargs={'uidb64': uid, 'token': token})
             )
             
+            site_settings = SiteSettings.objects.first()
             html_message = render_to_string('emails/student_confirmation.html', {
                 'user': user,
                 'domain': current_site.domain,
-                'activate_url': activate_url
+                'activate_url': activate_url,
+                'site_settings': site_settings,
             })
             plain_message = strip_tags(html_message)
             
@@ -64,7 +68,8 @@ def register(request):
                 dashboard_url = request.build_absolute_uri(reverse('manage_users'))
                 admin_html_message = render_to_string('emails/admin_new_student.html', {
                     'user': user,
-                    'dashboard_url': dashboard_url
+                    'dashboard_url': dashboard_url,
+                    'site_settings': SiteSettings.objects.first(),
                 })
                 admin_plain_message = strip_tags(admin_html_message)
                 
@@ -79,8 +84,8 @@ def register(request):
             except Exception as e:
                 print(f"Error sending admin notification: {e}")
 
-            messages.success(request, 'Registration successful. Please check your email to confirm your account.')
-            return redirect('login')
+            messages.success(request, 'Registration successful. Please check your email to confirm and activate your account.')
+            return render(request, 'users/register_success.html')
     else:
         form = UserRegisterForm()
     return render(request, 'users/register.html', {'form': form})
@@ -208,13 +213,85 @@ def admin_dashboard(request):
     total_posts = Post.objects.count()
     total_enrollments = Enrollment.objects.count()
     total_certificates = Certificate.objects.count()
-    
+
+    # Trends (last 7 days vs previous 7 days)
+    from datetime import timedelta, date
+    from django.utils import timezone
+    now = timezone.now()
+    start = now - timedelta(days=7)
+    prev_start = now - timedelta(days=14)
+    prev_end = start
+
+    def pct_change(prev, current):
+        if prev == 0:
+            return 100 if current > 0 else 0
+        return int(round(((current - prev) / prev) * 100))
+
+    users_week = User.objects.filter(date_joined__gte=start).count()
+    users_prev = User.objects.filter(date_joined__gte=prev_start, date_joined__lt=prev_end).count()
+    users_week_change = pct_change(users_prev, users_week)
+
+    projects_week_new = Project.objects.filter(created_at__gte=start).count()
+    courses_week_new = Course.objects.filter(created_at__gte=start).count()
+    posts_week_new = Post.objects.filter(published_at__gte=start).count()
+
+    # Page Visit Trend (daily/weekly/monthly/yearly toggle)
+    trend_type = request.GET.get('trend_type', 'daily')
+    visit_trend_labels = []
+    visit_trend_values = []
+
+    if trend_type == 'daily':
+        for i in range(6, -1, -1):
+            day = (now - timedelta(days=i)).date()
+            visit_trend_labels.append(day.strftime('%a'))
+            visit_trend_values.append(
+                PageVisit.objects.filter(visited_at__date=day).count()
+            )
+    elif trend_type == 'weekly':
+        for i in range(4, -1, -1):
+            week_start = (now - timedelta(weeks=i)) - timedelta(days=now.weekday())
+            week_end = week_start + timedelta(days=6, hours=23, minutes=59, seconds=59)
+            visit_trend_labels.append(f"Week {week_start.strftime('%W')}")
+            visit_trend_values.append(
+                PageVisit.objects.filter(visited_at__range=[week_start, week_end]).count()
+            )
+    elif trend_type == 'monthly':
+        current_year = now.year
+        current_month = now.month
+        months = []
+        for i in range(11, -1, -1):
+            m = current_month - i
+            y = current_year
+            while m <= 0:
+                m += 12
+                y -= 1
+            months.append((y, m))
+        for y, m in months:
+            visit_trend_labels.append(date(y, m, 1).strftime('%b'))
+            visit_trend_values.append(
+                PageVisit.objects.filter(visited_at__year=y, visited_at__month=m).count()
+            )
+    elif trend_type == 'yearly':
+        for i in range(4, -1, -1):
+            y = now.year - i
+            visit_trend_labels.append(str(y))
+            visit_trend_values.append(
+                PageVisit.objects.filter(visited_at__year=y).count()
+            )
+    else:
+        for i in range(6, -1, -1):
+            day = (now - timedelta(days=i)).date()
+            visit_trend_labels.append(day.strftime('%a'))
+            visit_trend_values.append(
+                PageVisit.objects.filter(visited_at__date=day).count()
+            )
+
     # Recent Data
     recent_users = User.objects.order_by('-date_joined')[:5]
     recent_contacts = Contact.objects.order_by('-created_at')[:5]
     recent_subscribers = Newsletter.objects.order_by('-subscribed_at')[:5]
     recent_enrollments = Enrollment.objects.order_by('-enrolled_at')[:5]
-    
+
     context = {
         'total_users': total_users,
         'total_projects': total_projects,
@@ -226,10 +303,21 @@ def admin_dashboard(request):
         'recent_contacts': recent_contacts,
         'recent_subscribers': recent_subscribers,
         'recent_enrollments': recent_enrollments,
+        # KPIs
+        'users_week_change': users_week_change,
+        'projects_week_new': projects_week_new,
+        'courses_week_new': courses_week_new,
+        'posts_week_new': posts_week_new,
+        # Chart data
+        'visit_trend_labels': visit_trend_labels,
+        'visit_trend_values': visit_trend_values,
+        'current_trend_type': trend_type,
     }
     return render(request, 'users/admin_dashboard.html', context)
 
 from django.core.paginator import Paginator
+from django.contrib.auth.forms import PasswordChangeForm
+from django.contrib.auth import update_session_auth_hash
 
 @staff_required
 def manage_users(request):
@@ -238,6 +326,33 @@ def manage_users(request):
     page_number = request.GET.get('page')
     users = paginator.get_page(page_number)
     return render(request, 'users/manage_users.html', {'users': users})
+
+@staff_required
+def create_admin_user(request):
+    if request.method == 'POST':
+        form = AdminCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            user.is_staff = True
+            user.save()
+            messages.success(request, 'Admin user created successfully!')
+            return redirect('manage_users')
+    else:
+        form = AdminCreationForm()
+    return render(request, 'users/admin_user_form.html', {'form': form, 'title': 'Create Admin User'})
+
+@login_required
+def change_password(request):
+    if request.method == 'POST':
+        form = PasswordChangeForm(request.user, request.POST)
+        if form.is_valid():
+            user = form.save()
+            update_session_auth_hash(request, user)
+            messages.success(request, 'Your password has been updated.')
+            return redirect('profile')
+    else:
+        form = PasswordChangeForm(request.user)
+    return render(request, 'users/change_password.html', {'form': form})
 
 @staff_required
 def delete_user(request, user_id):

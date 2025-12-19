@@ -1,5 +1,6 @@
 from django.contrib import admin
 from .models import Category, Course, Module, Lesson, Enrollment, Review, Certificate, LessonCompletion, CertificateSettings, Assessment, Question, Choice, Submission, StudentAnswer
+from .models import Payment
 
 class ChoiceInline(admin.TabularInline):
     model = Choice
@@ -86,3 +87,9 @@ class CertificateAdmin(admin.ModelAdmin):
 class LessonCompletionAdmin(admin.ModelAdmin):
     list_display = ('enrollment', 'lesson', 'completed_at', 'is_completed')
     list_filter = ('is_completed', 'completed_at')
+
+@admin.register(Payment)
+class PaymentAdmin(admin.ModelAdmin):
+    list_display = ('user', 'course', 'reference', 'amount', 'status', 'paid_at')
+    list_filter = ('status', 'course')
+    search_fields = ('reference', 'user__username', 'course__title')

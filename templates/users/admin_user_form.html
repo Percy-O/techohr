@@ -1,0 +1,69 @@
+{% extends 'layouts/admin_base.html' %}
+
+{% block admin_content %}
+<div class="w-full">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-800 dark:text-white">{{ title }}</h1>
+            <p class="text-gray-500 dark:text-gray-400 mt-1">Create a new administrator account with secure credentials.</p>
+        </div>
+        <div class="flex gap-2">
+            <a href="{% url 'manage_users' %}" class="px-4 py-2 text-sm bg-gray-900 dark:bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition"><i class="fas fa-users mr-2"></i>Back to Users</a>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Form Card -->
+        <div class="lg:col-span-2 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Username</label>
+                    <div class="dark-input-fix">{{ form.username }}</div>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">Use a unique username. This cannot be an email.</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Password</label>
+                        <div class="dark-input-fix">{{ form.password1 }}</div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Confirm Password</label>
+                        <div class="dark-input-fix">{{ form.password2 }}</div>
+                    </div>
+                </div>
+
+                <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 text-sm text-blue-800 dark:text-blue-200">
+                    <div class="flex items-start gap-3">
+                        <i class="fas fa-info-circle mt-0.5"></i>
+                        <div>
+                            <p class="font-semibold">Password Requirements</p>
+                            <ul class="list-disc ml-5 mt-1">
+                                <li>Minimum 8 characters</li>
+                                <li>Include letters and numbers</li>
+                                <li>Avoid common or weak passwords</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pt-2">
+                    <button type="submit" class="w-full md:w-auto px-6 py-3 bg-primary text-white font-bold rounded-lg hover:bg-blue-600 transition shadow-lg"><i class="fas fa-user-shield mr-2"></i>Create Admin</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Helpful Sidebar -->
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+            <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Guidelines</h3>
+            <ul class="space-y-3 text-sm text-gray-600 dark:text-gray-400">
+                <li class="flex items-start"><i class="fas fa-check-circle text-green-500 mr-2 mt-0.5"></i> Admins have elevated privileges. Assign carefully.</li>
+                <li class="flex items-start"><i class="fas fa-shield-alt text-indigo-500 mr-2 mt-0.5"></i> Use strong, unique passwords for all admin accounts.</li>
+                <li class="flex items-start"><i class="fas fa-user-lock text-yellow-500 mr-2 mt-0.5"></i> Consider enabling 2FA if available.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

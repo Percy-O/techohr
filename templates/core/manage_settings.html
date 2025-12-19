@@ -1,0 +1,255 @@
+{% extends 'layouts/admin_base.html' %}
+
+{% block admin_content %}
+<div class="w-full">
+    <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
+        <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-white">Site Settings</h1>
+        <a href="{% url 'home' %}" class="w-full sm:w-auto px-6 py-2 bg-gray-900 dark:bg-gray-800 text-white font-bold rounded-lg hover:bg-gray-700 transition text-center shadow-md">
+            <i class="fas fa-external-link-alt mr-2"></i> View Site
+        </a>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {% csrf_token %}
+        <!-- Site Settings Card -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+            <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-4">General</h2>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Site Name</label>
+                    {{ settings_form.site_name }}
+                </div>
+                <div class="space-y-6">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Logo</label>
+                            <div class="flex items-center gap-3">
+                                <div class="w-24 h-24 sm:w-28 sm:h-28 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 bg-white/60 dark:bg-gray-900/40 backdrop-blur-sm flex items-center justify-center ring-1 ring-blue-500/10">
+                                    {% if site_settings and site_settings.logo %}
+                                    <img id="logoPreview" src="{{ site_settings.logo.url }}" alt="Logo" class="w-full h-full object-contain">
+                                    {% else %}
+                                    <img id="logoPreview" src="" alt="Logo" class="w-full h-full object-contain hidden">
+                                    {% endif %}
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    {{ settings_form.logo }}
+                                    <input type="hidden" name="logo_clear" id="logoClear" value="0">
+                                    <label for="{{ settings_form.logo.id_for_label }}" class="px-3 py-1.5 text-xs bg-blue-600 dark:bg-blue-600 text-white rounded-md hover:bg-blue-700">Upload</label>
+                                    <button type="button" id="logoClearBtn" class="px-3 py-1.5 text-xs rounded-md bg-red-600/10 dark:bg-red-700/20 text-red-600 dark:text-red-400 hover:bg-red-600/20">Clear</button>
+                                </div>
+                            </div>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">PNG, JPG up to 2MB.</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Favicon</label>
+                            <div class="flex items-center gap-3">
+                                <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 bg-white/60 dark:bg-gray-900/40 backdrop-blur-sm flex items-center justify-center ring-1 ring-blue-500/10">
+                                    {% if site_settings and site_settings.favicon %}
+                                    <img id="faviconPreview" src="{{ site_settings.favicon.url }}" alt="Favicon" class="w-full h-full object-cover">
+                                    {% else %}
+                                    <img id="faviconPreview" src="" alt="Favicon" class="w-full h-full object-cover hidden">
+                                    {% endif %}
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    {{ settings_form.favicon }}
+                                    <input type="hidden" name="favicon_clear" id="faviconClear" value="0">
+                                    <label for="{{ settings_form.favicon.id_for_label }}" class="px-3 py-1.5 text-xs bg-blue-600 dark:bg-blue-600 text-white rounded-md hover:bg-blue-700">Upload</label>
+                                    <button type="button" id="faviconClearBtn" class="px-3 py-1.5 text-xs rounded-md bg-red-600/10 dark:bg-red-700/20 text-red-600 dark:text-red-400 hover:bg-red-600/20">Clear</button>
+                                </div>
+                            </div>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">PNG or ICO, 32x32 or 64x64.</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Light Logo</label>
+                            <div class="flex items-center gap-3">
+                                <div class="w-24 h-24 sm:w-28 sm:h-28 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 bg-white/60 dark:bg-gray-900/40 backdrop-blur-sm flex items-center justify-center ring-1 ring-blue-500/10">
+                                    {% if site_settings and site_settings.logo_light %}
+                                    <img id="logoLightPreview" src="{{ site_settings.logo_light.url }}" alt="Logo Light" class="w-full h-full object-contain">
+                                    {% else %}
+                                    <img id="logoLightPreview" src="" alt="Logo Light" class="w-full h-full object-contain hidden">
+                                    {% endif %}
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    {{ settings_form.logo_light }}
+                                    <input type="hidden" name="logo_light_clear" id="logoLightClear" value="0">
+                                    <label for="{{ settings_form.logo_light.id_for_label }}" class="px-3 py-1.5 text-xs bg-blue-600 dark:bg-blue-600 text-white rounded-md hover:bg-blue-700">Upload</label>
+                                    <button type="button" id="logoLightClearBtn" class="px-3 py-1.5 text-xs rounded-md bg-red-600/10 dark:bg-red-700/20 text-red-600 dark:text-red-400 hover:bg-red-600/20">Clear</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Dark Logo</label>
+                            <div class="flex items-center gap-3">
+                                <div class="w-24 h-24 sm:w-28 sm:h-28 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 bg-white/60 dark:bg-gray-900/40 backdrop-blur-sm flex items-center justify-center ring-1 ring-blue-500/10">
+                                    {% if site_settings and site_settings.logo_dark %}
+                                    <img id="logoDarkPreview" src="{{ site_settings.logo_dark.url }}" alt="Logo Dark" class="w-full h-full object-contain">
+                                    {% else %}
+                                    <img id="logoDarkPreview" src="" alt="Logo Dark" class="w-full h-full object-contain hidden">
+                                    {% endif %}
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    {{ settings_form.logo_dark }}
+                                    <input type="hidden" name="logo_dark_clear" id="logoDarkClear" value="0">
+                                    <label for="{{ settings_form.logo_dark.id_for_label }}" class="px-3 py-1.5 text-xs bg-blue-600 dark:bg-blue-600 text-white rounded-md hover:bg-blue-700">Upload</label>
+                                    <button type="button" id="logoDarkClearBtn" class="px-3 py-1.5 text-xs rounded-md bg-red-600/10 dark:bg-red-700/20 text-red-600 dark:text-red-400 hover:bg-red-600/20">Clear</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Address</label>
+                    {{ settings_form.address }}
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Primary Email</label>
+                        {{ settings_form.email_primary }}
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Support Email</label>
+                        {{ settings_form.email_support }}
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Phone</label>
+                        {{ settings_form.phone_primary }}
+                    </div>
+                </div>
+            </div>
+            <div class="mt-6">
+                <h3 class="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Social Links</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-3">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Facebook</label>
+                        {{ settings_form.facebook_url }}
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Twitter</label>
+                        {{ settings_form.twitter_url }}
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">LinkedIn</label>
+                        {{ settings_form.linkedin_url }}
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Instagram</label>
+                        {{ settings_form.instagram_url }}
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Google Maps Embed URL</label>
+                    {{ settings_form.map_embed_url }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Company Stats Card -->
+        <div class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+            <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-4">Company Stats</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Projects Completed</label>
+                    {{ stats_form.projects_completed }}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Happy Clients</label>
+                    {{ stats_form.happy_clients }}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Team Members</label>
+                    {{ stats_form.team_members }}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Years of Experience</label>
+                    {{ stats_form.experience_years }}
+                </div>
+            </div>
+
+                <div class="mt-6 p-6 bg-white/50 dark:bg-gray-900/40 backdrop-blur-sm rounded-xl border border-gray-200 dark:border-gray-700">
+                    <div class="text-sm text-gray-600 dark:text-gray-300 font-semibold">Preview</div>
+                    <div class="mt-4 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+                        <div class="p-4 rounded-xl bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+                            <div class="text-3xl font-bold text-primary">{{ stats_form.projects_completed.value|default:'50' }}+</div>
+                            <p class="text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider mt-1">Projects</p>
+                        </div>
+                        <div class="p-4 rounded-xl bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+                            <div class="text-3xl font-bold text-primary">{{ stats_form.happy_clients.value|default:'30' }}+</div>
+                            <p class="text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider mt-1">Clients</p>
+                        </div>
+                        <div class="p-4 rounded-xl bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+                            <div class="text-3xl font-bold text-primary">{{ stats_form.team_members.value|default:'15' }}+</div>
+                            <p class="text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider mt-1">Team</p>
+                        </div>
+                        <div class="p-4 rounded-xl bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+                            <div class="text-3xl font-bold text-primary">{{ stats_form.experience_years.value|default:'3' }}+</div>
+                            <p class="text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider mt-1">Years</p>
+                        </div>
+                    </div>
+                </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="lg:col-span-2 flex justify-end">
+            <button type="submit" class="px-6 py-3 bg-primary text-white font-bold rounded-lg hover:bg-blue-600 transition shadow-lg">
+                <i class="fas fa-save mr-2"></i> Save Changes
+            </button>
+        </div>
+    </form>
+    
+    <div class="mt-8">
+        <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-4">Team Management</h2>
+        <a href="{% url 'manage_employees' %}" class="inline-flex items-center px-4 py-2 bg-gray-900 dark:bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition">
+            <i class="fas fa-users-cog mr-2"></i> Manage Team Members
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    const logoInput = document.getElementById('{{ settings_form.logo.id_for_label }}');
+    const logoPreview = document.getElementById('logoPreview');
+    const logoLightInput = document.getElementById('{{ settings_form.logo_light.id_for_label }}');
+    const logoLightPreview = document.getElementById('logoLightPreview');
+    const logoDarkInput = document.getElementById('{{ settings_form.logo_dark.id_for_label }}');
+    const logoDarkPreview = document.getElementById('logoDarkPreview');
+    const faviconInput = document.getElementById('{{ settings_form.favicon.id_for_label }}');
+    const faviconPreview = document.getElementById('faviconPreview');
+    const logoClear = document.getElementById('logoClear');
+    const logoLightClear = document.getElementById('logoLightClear');
+    const logoDarkClear = document.getElementById('logoDarkClear');
+    const faviconClear = document.getElementById('faviconClear');
+    function bindPreview(input, img) {
+        if (!input || !img) return;
+        input.addEventListener('change', function(e) {
+            const file = e.target.files && e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                img.src = evt.target.result;
+                img.classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+    function bindClear(btn, input, img, hidden) {
+        if (!btn) return;
+        btn.addEventListener('click', function() {
+            if (input) input.value = '';
+            if (img) { img.src = ''; img.classList.add('hidden'); }
+            if (hidden) hidden.value = '1';
+        });
+    }
+    bindPreview(logoInput, logoPreview);
+    bindPreview(faviconInput, faviconPreview);
+    bindPreview(logoLightInput, logoLightPreview);
+    bindPreview(logoDarkInput, logoDarkPreview);
+    bindClear(document.getElementById('logoClearBtn'), logoInput, logoPreview, logoClear);
+    bindClear(document.getElementById('faviconClearBtn'), faviconInput, faviconPreview, faviconClear);
+    bindClear(document.getElementById('logoLightClearBtn'), logoLightInput, logoLightPreview, logoLightClear);
+    bindClear(document.getElementById('logoDarkClearBtn'), logoDarkInput, logoDarkPreview, logoDarkClear);
+    bindPreview(faviconInput, faviconPreview);
+</script>
+{% endblock %}

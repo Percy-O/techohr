@@ -322,13 +322,21 @@
                 {% else %}
                     <div class="text-3xl font-bold text-gray-900 dark:text-white mb-6 text-center">
                         {% if course.price > 0 %}
-                            ${{ course.price }}
+                            ₦{{ course.price|floatformat:0 }}
                         {% else %}
                             Free
                         {% endif %}
                     </div>
+                    {% if course.price > 0 %}
+                    <div class="flex gap-3">
+                        <a href="{% url 'enroll_course' course.slug %}" class="flex-1 py-3 bg-primary text-white font-bold text-center rounded-md hover:bg-blue-600 transition">Enroll Now</a>
+                        <a href="{% url 'course_payment' course.slug %}" class="flex-1 py-3 bg-green-600 text-white font-bold text-center rounded-md hover:bg-green-700 transition">Pay Now</a>
+                    </div>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 text-center mb-6 mt-3">Payment required before enrollment is activated.</p>
+                    {% else %}
                     <a href="{% url 'enroll_course' course.slug %}" class="block w-full py-3 bg-primary text-white font-bold text-center rounded-md hover:bg-blue-600 transition mb-4">Enroll Now</a>
                     <p class="text-xs text-gray-500 dark:text-gray-400 text-center mb-6">30-Day Money-Back Guarantee</p>
+                    {% endif %}
                 {% endif %}
                 
                 <div class="space-y-3 text-sm text-gray-600 dark:text-gray-400">
