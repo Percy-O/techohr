@@ -28,6 +28,7 @@ from PIL import Image, ImageDraw, ImageEnhance # Import PIL
 import json
 from urllib import request as urlrequest, parse as urlparse
 import time
+import tempfile
 
 try:
     import barcode
@@ -1033,8 +1034,8 @@ def download_certificate(request, certificate_id):
             print(f"Error drawing borders: {e}")
 
         # Save to temp file
-        temp_bg_filename = f"temp_bg_{uuid.uuid4()}.png"
-        temp_bg_path = os.path.join(django_settings.BASE_DIR, temp_bg_filename)
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as tmp:
+            temp_bg_path = tmp.name
         background.save(temp_bg_path)
         
     except Exception as e:
@@ -1043,18 +1044,19 @@ def download_certificate(request, certificate_id):
     # Create PDF
     pdf = FPDF(orientation='L', unit='mm', format='A4')
     pdf.set_auto_page_break(auto=False)
-    
-    # Register Fonts
     font_path = os.path.join(django_settings.BASE_DIR, 'static', 'fonts')
     try:
         if os.path.exists(os.path.join(font_path, 'GreatVibes-Regular.ttf')):
-             pdf.add_font('GreatVibes', '', os.path.join(font_path, 'GreatVibes-Regular.ttf'))
+            pdf.add_font('GreatVibes', '', os.path.join(font_path, 'GreatVibes-Regular.ttf'))
         if os.path.exists(os.path.join(font_path, 'Lato-Regular.ttf')):
-             pdf.add_font('Lato', '', os.path.join(font_path, 'Lato-Regular.ttf'))
+            pdf.add_font('Lato', '', os.path.join(font_path, 'Lato-Regular.ttf'))
         if os.path.exists(os.path.join(font_path, 'Lato-Bold.ttf')):
-             pdf.add_font('Lato', 'B', os.path.join(font_path, 'Lato-Bold.ttf'))
+            pdf.add_font('Lato', 'B', os.path.join(font_path, 'Lato-Bold.ttf'))
     except Exception as e:
         print(f"Font loading error: {e}")
+    family_script = 'GreatVibes' if os.path.exists(os.path.join(font_path, 'GreatVibes-Regular.ttf')) else 'Helvetica'
+    family_sans = 'Lato' if os.path.exists(os.path.join(font_path, 'Lato-Regular.ttf')) else 'Helvetica'
+    family_sans_bold = 'Lato' if os.path.exists(os.path.join(font_path, 'Lato-Bold.ttf')) else 'Helvetica'
 
     pdf.add_page()
     
@@ -1079,24 +1081,24 @@ def download_certificate(request, certificate_id):
 
     # 3. Title: "Certificate of Completion"
     # Font: Sans-Bold (Lato-Bold)
-    pdf.set_font('Lato', 'B', 42)
+    pdf.set_font(family_sans_bold, 'B' if family_sans_bold != 'Helvetica' else 'B', 42)
     pdf.set_text_color(*primary_color)
     pdf.set_y(50) # Shifted down (was 45)
-    pdf.cell(0, 15, 'Certificate of Completion', align='C', new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, 15, 'Certificate of Completion', align='C')
     
     # 4. Subtitle: "THIS IS TO CERTIFY THAT"
-    pdf.set_font('Lato', '', 10)
+    pdf.set_font(family_sans, '', 10)
     pdf.set_text_color(*secondary_color) # Keep uniform color or slightly lighter
     pdf.set_y(67) # Shifted down (was 62)
-    pdf.cell(0, 10, 'THIS IS TO CERTIFY THAT', align='C', new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, 10, 'THIS IS TO CERTIFY THAT', align='C')
     
     # 5. Student Name
     # Font: Script (GreatVibes)
-    pdf.set_font('GreatVibes', '', 48)
+    pdf.set_font(family_script, '', 48)
     pdf.set_text_color(*primary_color)
     pdf.set_y(80) # Shifted down (was 75)
     student_name = certificate.student.get_full_name() or certificate.student.username
-    pdf.cell(0, 20, student_name, align='C', new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, 20, student_name, align='C')
     
     # Line under name
     text_width = pdf.get_string_width(student_name)
@@ -1108,16 +1110,16 @@ def download_certificate(request, certificate_id):
     pdf.line(start_x, 100, start_x + line_width, 100) # Shifted down (was 95)
     
     # 6. "HAS SUCCESSFULLY COMPLETED"
-    pdf.set_font('Lato', 'B', 8)
+    pdf.set_font(family_sans_bold, 'B' if family_sans_bold != 'Helvetica' else 'B', 8)
     pdf.set_text_color(*secondary_color)
     pdf.set_y(105) # Shifted down (was 100)
-    pdf.cell(0, 10, 'HAS SUCCESSFULLY COMPLETED', align='C', new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, 10, 'HAS SUCCESSFULLY COMPLETED', align='C')
     
     # 7. Course Name
-    pdf.set_font('Lato', '', 24)
+    pdf.set_font(family_sans, '', 24)
     pdf.set_text_color(*primary_color)
     pdf.set_y(120) # Shifted down (was 115)
-    pdf.cell(0, 15, certificate.course.title.upper(), align='C', new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, 15, certificate.course.title.upper(), align='C')
     
     # 8. Bottom Section (Date, Seal, Signature)
     bottom_y = 165 # Shifted down (was 160)
@@ -1130,9 +1132,9 @@ def download_certificate(request, certificate_id):
         
     # Date (Left)
     pdf.set_xy(40, bottom_y)
-    pdf.set_font('Lato', 'B', 12)
+    pdf.set_font(family_sans_bold, 'B' if family_sans_bold != 'Helvetica' else 'B', 12)
     pdf.set_text_color(*secondary_color)
-    pdf.cell(60, 5, certificate.issued_at.strftime('%B %d, %Y').upper(), align='C', new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(60, 5, certificate.issued_at.strftime('%B %d, %Y').upper(), align='C')
     
     # Date Line
     pdf.set_draw_color(*accent_color)
@@ -1140,7 +1142,7 @@ def download_certificate(request, certificate_id):
     
     # Date Label
     pdf.set_xy(40, bottom_y + 8)
-    pdf.set_font('Lato', 'B', 8)
+    pdf.set_font(family_sans_bold, 'B' if family_sans_bold != 'Helvetica' else 'B', 8)
     pdf.cell(60, 5, 'DATE OF COMPLETION', align='C')
     
     # Signature (Right)
@@ -1189,17 +1191,17 @@ def download_certificate(request, certificate_id):
     
     # Signature Label
     pdf.set_xy(200, bottom_y + 8)
-    pdf.set_font('Lato', 'B', 8)
+    pdf.set_font(family_sans_bold, 'B' if family_sans_bold != 'Helvetica' else 'B', 8)
     pdf.cell(60, 5, 'SIGNATURE', align='C')
 
     # Instructor Name (Below Signature)
     pdf.set_xy(200, bottom_y + 13)
     instructor_name = certificate.course.instructor.get_full_name() or certificate.course.instructor.username
-    pdf.set_font('Lato', 'B', 10)
+    pdf.set_font(family_sans_bold, 'B' if family_sans_bold != 'Helvetica' else 'B', 10)
     pdf.set_text_color(*secondary_color)
     pdf.cell(60, 5, instructor_name, align='C')
     pdf.set_xy(200, bottom_y + 18)
-    pdf.set_font('Lato', '', 8)
+    pdf.set_font(family_sans, '', 8)
     pdf.cell(60, 5, 'INSTRUCTOR', align='C')
     
     # 9. Barcode (Below Seal)
@@ -1229,9 +1231,10 @@ def download_certificate(request, certificate_id):
             print(f"Barcode error: {e}")
 
     # Output
-    buffer = io.BytesIO()
-    pdf.output(buffer)
-    buffer.seek(0)
+    pdf_bytes = pdf.output(dest='S')
+    if isinstance(pdf_bytes, str):
+        pdf_bytes = pdf_bytes.encode('latin-1')
+    buffer = io.BytesIO(pdf_bytes)
     
     # Cleanup Temp File
     if temp_bg_path and os.path.exists(temp_bg_path):
