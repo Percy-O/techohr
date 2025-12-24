@@ -440,7 +440,7 @@ def verify_course_payment(request, slug):
         messages.error(request, 'Payment verification failed: missing reference.')
         return redirect('course_detail', slug=slug)
     # Retry verification a few times to allow Paystack to finalize the transaction
-    attempts = 3
+    attempts = 6
     last_error_message = None
     for i in range(attempts):
         verify_req = urlrequest.Request(
@@ -453,7 +453,8 @@ def verify_course_payment(request, slug):
                 body = resp.read().decode('utf-8')
                 res = json.loads(body)
                 data = res.get('data') or {}
-                if res.get('status') and data.get('status') == 'success':
+                status_val = str(data.get('status') or '').lower()
+                if res.get('status') and (status_val == 'success' or status_val == 'successful'):
                     try:
                         Payment.objects.get_or_create(
                             reference=data.get('reference') or reference or '',
@@ -513,8 +514,8 @@ def verify_course_payment(request, slug):
             last_error_message = 'Network error contacting Paystack during verification.'
         except Exception:
             last_error_message = 'Payment verification failed due to an unexpected error.'
-        # Wait before next attempt
-        time.sleep(1)
+        # Wait before next attempt (incremental backoff)
+        time.sleep(i + 1)
     messages.error(request, last_error_message or 'Payment verification failed. Please contact support.')
     return redirect('course_detail', slug=slug)
 
