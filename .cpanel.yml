@@ -3,7 +3,7 @@ deployment:
   tasks:
     # Set your deployment path
     - export DEPLOYPATH=/home/techohrc/techohr
-    - export VENV_PATH=/home/techohrc/virtualenv/techohr.com.ng/3.12
+    - export VENV_PATH=/home/techohrc/virtualenv/techohr/3.12
     
     # Copy files to server
     - /bin/rsync -av --exclude='.git' --exclude='*.pyc' --exclude='__pycache__' ./ $DEPLOYPATH/
