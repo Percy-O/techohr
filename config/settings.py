@@ -50,11 +50,7 @@ INSTALLED_APPS = [
     "users",
     "courses",
     "blog",
-    # Authentication / Social
-    "allauth",
-    "allauth.account",
-    "allauth.socialaccount",
-    "allauth.socialaccount.providers.google",
+    
 ]
 
 MIDDLEWARE = [
@@ -63,7 +59,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
-    "allauth.account.middleware.AccountMiddleware",
+    
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "core.middleware.PageVisitLoggerMiddleware",
@@ -146,27 +142,9 @@ MEDIA_ROOT = BASE_DIR / "media"
 # Custom User Model
 AUTH_USER_MODEL = "users.User"
 
-# Authentication backends for django-allauth
 AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
-    "allauth.account.auth_backends.AuthenticationBackend",
 ]
-
-# django-allauth configuration
-ACCOUNT_EMAIL_VERIFICATION = "none"
-ACCOUNT_SIGNUP_FIELDS = [
-    "email*",
-    "username*",
-    "password1*",
-    "password2*",
-]
-
-SOCIALACCOUNT_PROVIDERS = {
-    "google": {
-        "SCOPE": ["profile", "email"],
-        "AUTH_PARAMS": {"access_type": "online"},
-    }
-}
 
 LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "home"

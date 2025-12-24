@@ -1,3 +1,2 @@
-django-allauth==65.13.1
 requests
 PyJWT
