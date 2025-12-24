@@ -10,7 +10,7 @@ local_settings.py
 db.sqlite3-journal
 
 # Media files - User uploads should not be committed
-media/
+
 
 # Environment variables
 .env
