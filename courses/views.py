@@ -11,6 +11,10 @@ from django.template.loader import get_template, render_to_string
 from django.utils.html import strip_tags
 from django.core.mail import send_mail
 from django.conf import settings as django_settings
+from django.views.decorators.csrf import csrf_exempt
+from decimal import Decimal
+import hmac
+import hashlib
 from django.http import HttpResponse
 from urllib.error import HTTPError, URLError
 from django.urls import reverse
@@ -516,6 +520,20 @@ def verify_course_payment(request, slug):
             last_error_message = 'Payment verification failed due to an unexpected error.'
         # Wait before next attempt (incremental backoff)
         time.sleep(i + 1)
+    try:
+        payment = Payment.objects.filter(reference=reference).first()
+        if payment and str(payment.status).lower() in ('success', 'successful'):
+            if not Enrollment.objects.filter(student=request.user, course=course).exists():
+                Enrollment.objects.create(student=request.user, course=course)
+            messages.success(request, f'Payment confirmed. You are now enrolled in {course.title}.')
+            first_module = course.modules.first()
+            if first_module:
+                first_lesson = first_module.lessons.first()
+                if first_lesson:
+                    return redirect('lesson_detail', course_slug=course.slug, lesson_slug=first_lesson.slug)
+            return redirect('course_detail', slug=slug)
+    except Exception:
+        pass
     messages.error(request, last_error_message or 'Payment verification failed. Please contact support.')
     return redirect('course_detail', slug=slug)
 
@@ -533,9 +551,14 @@ def course_payment(request, slug):
     if course.price <= 0:
         return redirect('enroll_course', slug=slug)
     keys_ready = bool(django_settings.PAYSTACK_PUBLIC_KEY and django_settings.PAYSTACK_PUBLIC_KEY != 'PAYSTACK_PUBLIC_KEY' and django_settings.PAYSTACK_SECRET_KEY and django_settings.PAYSTACK_SECRET_KEY != 'PAYSTACK_SECRET_KEY')
+    try:
+        amount_kobo = int(Decimal(str(course.price)) * 100)
+    except Exception:
+        amount_kobo = int(float(course.price) * 100)
     return render(request, 'courses/course_payment.html', {
         'course': course,
         'amount_naira': float(course.price),
+        'amount_kobo': amount_kobo,
         'keys_ready': keys_ready,
         'public_key': django_settings.PAYSTACK_PUBLIC_KEY if keys_ready else '',
     })
@@ -555,6 +578,53 @@ def course_payment(request, slug):
     # Fallback if no lessons found
     messages.info(request, "Course content is coming soon.")
     return redirect('course_detail', slug=slug)
+
+@csrf_exempt
+def paystack_webhook(request):
+    try:
+        body = request.body
+        signature = request.headers.get('X-Paystack-Signature') or request.META.get('HTTP_X_PAYSTACK_SIGNATURE')
+        if not signature:
+            return HttpResponse(status=400)
+        computed = hmac.new(
+            key=django_settings.PAYSTACK_SECRET_KEY.encode('utf-8'),
+            msg=body,
+            digestmod=hashlib.sha512
+        ).hexdigest()
+        if not hmac.compare_digest(computed, signature):
+            return HttpResponse(status=401)
+        payload = json.loads(body.decode('utf-8'))
+        data = payload.get('data') or {}
+        status_val = str(data.get('status') or '').lower()
+        reference = data.get('reference')
+        amount = data.get('amount') or 0
+        course_slug = (data.get('metadata') or {}).get('course_slug')
+        user_id = (data.get('metadata') or {}).get('user_id')
+        if status_val in ('success', 'successful') and reference:
+            try:
+                course = Course.objects.filter(slug=course_slug).first()
+                user = None
+                if user_id:
+                    from django.contrib.auth import get_user_model
+                    User = get_user_model()
+                    user = User.objects.filter(id=user_id).first()
+                Payment.objects.get_or_create(
+                    reference=reference,
+                    defaults={
+                        'user': user,
+                        'course': course,
+                        'amount': amount,
+                        'status': status_val,
+                        'raw': data,
+                    }
+                )
+                if user and course and not Enrollment.objects.filter(student=user, course=course).exists():
+                    Enrollment.objects.create(student=user, course=course)
+            except Exception:
+                pass
+        return HttpResponse(status=200)
+    except Exception:
+        return HttpResponse(status=400)
 
 @staff_required
 def manage_courses(request):

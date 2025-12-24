@@ -48,6 +48,7 @@ urlpatterns = [
     path('<slug:slug>/pay/', views.course_payment, name='course_payment'),
     path('<slug:slug>/pay/init/', views.init_course_payment, name='init_course_payment'),
     path('<slug:slug>/pay/verify/', views.verify_course_payment, name='verify_course_payment'),
+    path('pay/webhook/', views.paystack_webhook, name='paystack_webhook'),
     path('<slug:slug>/enroll/', views.enroll_course, name='enroll_course'),
     path('<slug:slug>/review/', views.add_review, name='add_review'),
     path('<slug:slug>/', views.course_detail, name='course_detail'),

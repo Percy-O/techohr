@@ -27,8 +27,13 @@
                     var handler = PaystackPop.setup({
                         key: '{{ public_key }}',
                         email: '{{ user.email|default:"noemail@techohr.com.ng" }}',
-                        amount: {{ amount_naira|floatformat:0 }} * 100,
+                        amount: {{ amount_kobo }},
                         currency: 'NGN',
+                        metadata: {
+                            course_slug: '{{ course.slug }}',
+                            user_id: {{ user.id|default:0 }},
+                            username: '{{ user.username|default:"guest" }}'
+                        },
                         callback: function(response){
                             var ref = response.reference;
                             window.location.href = '{% url "verify_course_payment" course.slug %}?reference=' + encodeURIComponent(ref);
