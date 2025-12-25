@@ -5,7 +5,11 @@ import uuid
 from PIL import Image, ImageDraw
 from fpdf import FPDF
 from django.conf import settings as django_settings
+from django.core.mail import EmailMultiAlternatives
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
 from .models import CertificateSettings
+from core.models import SiteSettings
 
 try:
     import barcode
@@ -342,20 +346,47 @@ def generate_certificate_pdf_bytes(certificate):
             
     return pdf_bytes
 
-from django.core.mail import EmailMessage
-
-def send_certificate_email(certificate):
+def send_certificate_email(certificate, request=None):
     try:
         pdf_bytes = generate_certificate_pdf_bytes(certificate)
         user = certificate.student
         course = certificate.course
+        site_settings = SiteSettings.objects.first()
         
-        email = EmailMessage(
+        # Determine base URL for logo
+        logo_url = None
+        dashboard_url = '#'
+        
+        if request:
+            protocol = 'https' if request.is_secure() else 'http'
+            domain = request.get_host()
+            base_url = f"{protocol}://{domain}"
+            
+            if site_settings and site_settings.logo_light:
+                logo_url = f"{base_url}{site_settings.logo_light.url}"
+            elif site_settings and site_settings.logo:
+                 logo_url = f"{base_url}{site_settings.logo.url}"
+                 
+            dashboard_url = f"{base_url}/dashboard/" # Assuming /dashboard/ exists
+        
+        context = {
+            'user': user,
+            'course': course,
+            'site_settings': site_settings,
+            'logo_url': logo_url,
+            'dashboard_url': dashboard_url,
+        }
+        
+        html_content = render_to_string('emails/certificate_email.html', context)
+        text_content = strip_tags(html_content)
+        
+        email = EmailMultiAlternatives(
             subject=f'Certificate of Completion - {course.title}',
-            body=f'Congratulations {user.get_full_name() or user.username}!\n\nYou have successfully completed the course "{course.title}".\n\nPlease find your certificate attached.',
+            body=text_content,
             from_email=django_settings.DEFAULT_FROM_EMAIL,
             to=[user.email],
         )
+        email.attach_alternative(html_content, "text/html")
         email.attach(f'certificate_{certificate.certificate_id}.pdf', pdf_bytes, 'application/pdf')
         email.send(fail_silently=True)
         return True

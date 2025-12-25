@@ -478,6 +478,16 @@ def verify_course_payment(request, slug):
                         Enrollment.objects.create(student=request.user, course=course)
                     try:
                         site_settings = SiteSettings.objects.first()
+                        
+                        # Calculate logo_url
+                        logo_url = None
+                        if request:
+                             base_url = request.build_absolute_uri('/')[:-1]
+                             if site_settings and site_settings.logo_light:
+                                 logo_url = f"{base_url}{site_settings.logo_light.url}"
+                             elif site_settings and site_settings.logo:
+                                 logo_url = f"{base_url}{site_settings.logo.url}"
+
                         amount_naira = (data.get('amount') or 0) / 100.0
                         receipt_html = render_to_string('emails/payment_receipt.html', {
                             'user': request.user,
@@ -488,6 +498,7 @@ def verify_course_payment(request, slug):
                             'paid_at': data.get('paid_at') or timezone.now(),
                             'start_url': request.build_absolute_uri(reverse('course_detail', kwargs={'slug': slug})),
                             'site_settings': site_settings,
+                            'logo_url': logo_url,
                         })
                         receipt_plain = strip_tags(receipt_html)
                         send_mail(
@@ -880,7 +891,7 @@ def mark_lesson_complete(request, pk):
         if lesson.module.course.has_certificate:
             cert, created = Certificate.objects.get_or_create(student=request.user, course=lesson.module.course)
             if created:
-                send_certificate_email(cert)
+                send_certificate_email(cert, request)
             messages.success(request, 'Congratulations! You have completed the course and earned a certificate.')
     
     messages.success(request, 'Lesson marked as complete!')
@@ -905,7 +916,7 @@ def mark_all_complete(request, course_slug):
     if course.has_certificate:
         cert, created = Certificate.objects.get_or_create(student=request.user, course=course)
         if created:
-            send_certificate_email(cert)
+            send_certificate_email(cert, request)
         messages.success(request, 'Congratulations! You have completed the course and earned a certificate.')
     else:
         messages.success(request, 'All lessons marked as complete!')

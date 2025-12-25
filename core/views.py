@@ -55,13 +55,25 @@ def contact(request):
         try:
             dashboard_url = request.build_absolute_uri(reverse('manage_messages'))
             from core.models import SiteSettings
+            site_settings = SiteSettings.objects.first()
+            
+            # Calculate logo_url
+            logo_url = None
+            if request:
+                 base_url = request.build_absolute_uri('/')[:-1]
+                 if site_settings and site_settings.logo_light:
+                     logo_url = f"{base_url}{site_settings.logo_light.url}"
+                 elif site_settings and site_settings.logo:
+                     logo_url = f"{base_url}{site_settings.logo.url}"
+            
             html_message = render_to_string('emails/contact_notification.html', {
                 'name': name,
                 'email': email,
                 'subject': subject,
                 'message': message,
                 'dashboard_url': dashboard_url,
-                'site_settings': SiteSettings.objects.first(),
+                'site_settings': site_settings,
+                'logo_url': logo_url,
             })
             plain_message = strip_tags(html_message)
             

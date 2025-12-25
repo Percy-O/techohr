@@ -1,0 +1,27 @@
+{% extends 'emails/base_email.html' %}
+
+{% block title %}Certificate of Completion - {{ course.title }}{% endblock %}
+
+{% block content %}
+<div style="text-align: center;">
+    <h1 style="color: #1a202c; font-size: 24px; font-weight: bold; margin-bottom: 16px;">Congratulations, {{ user.get_full_name|default:user.username }}!</h1>
+    
+    <p style="font-size: 16px; color: #4b5563; margin-bottom: 24px;">
+        You have successfully completed the course <strong style="color: #0066FF;">{{ course.title }}</strong>.
+    </p>
+
+    <div style="background-color: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; padding: 24px; margin-bottom: 24px;">
+        <p style="margin: 0; color: #0369a1; font-size: 14px;">
+            Your official certificate is attached to this email. You can also download it anytime from your dashboard.
+        </p>
+    </div>
+
+    <p style="margin-bottom: 32px;">
+        We are proud of your achievement! Keep learning and growing.
+    </p>
+
+    <a href="{{ dashboard_url }}" class="button" style="display: inline-block; background-color: #0066FF; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">
+        Go to Dashboard
+    </a>
+</div>
+{% endblock %}

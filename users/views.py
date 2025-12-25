@@ -43,11 +43,22 @@ def register(request):
             )
             
             site_settings = SiteSettings.objects.first()
+            
+            # Calculate logo_url
+            logo_url = None
+            if request:
+                 base_url = request.build_absolute_uri('/')[:-1]
+                 if site_settings and site_settings.logo_light:
+                     logo_url = f"{base_url}{site_settings.logo_light.url}"
+                 elif site_settings and site_settings.logo:
+                     logo_url = f"{base_url}{site_settings.logo.url}"
+
             html_message = render_to_string('emails/student_confirmation.html', {
                 'user': user,
                 'domain': current_site.domain,
                 'activate_url': activate_url,
                 'site_settings': site_settings,
+                'logo_url': logo_url,
             })
             plain_message = strip_tags(html_message)
             
@@ -69,7 +80,8 @@ def register(request):
                 admin_html_message = render_to_string('emails/admin_new_student.html', {
                     'user': user,
                     'dashboard_url': dashboard_url,
-                    'site_settings': SiteSettings.objects.first(),
+                    'site_settings': site_settings,
+                    'logo_url': logo_url,
                 })
                 admin_plain_message = strip_tags(admin_html_message)
                 
