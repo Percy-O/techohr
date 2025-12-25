@@ -477,30 +477,32 @@ def verify_course_payment(request, slug):
                         pass
                     if not Enrollment.objects.filter(student=request.user, course=course).exists():
                         Enrollment.objects.create(student=request.user, course=course)
-                    try:
-                        site_settings = SiteSettings.objects.first()
                         
-                        amount_naira = (data.get('amount') or 0) / 100.0
-                        
-                        context = {
-                            'user': request.user,
-                            'course': course,
-                            'reference': data.get('reference') or reference,
-                            'amount_naira': amount_naira,
-                            'status': data.get('status'),
-                            'paid_at': data.get('paid_at') or timezone.now(),
-                            'start_url': request.build_absolute_uri(reverse('course_detail', kwargs={'slug': slug})),
-                        }
-                        
-                        send_html_email(
-                            subject=f'Payment Receipt - {course.title}',
-                            template_name='emails/payment_receipt.html',
-                            context=context,
-                            recipient_list=[request.user.email],
-                            request=request
-                        )
-                    except Exception:
-                        pass
+                        # Only send email on new enrollment to prevent duplicates
+                        try:
+                            site_settings = SiteSettings.objects.first()
+                            
+                            amount_naira = (data.get('amount') or 0) / 100.0
+                            
+                            context = {
+                                'user': request.user,
+                                'course': course,
+                                'reference': data.get('reference') or reference,
+                                'amount_naira': amount_naira,
+                                'status': data.get('status'),
+                                'paid_at': data.get('paid_at') or timezone.now(),
+                                'start_url': request.build_absolute_uri(reverse('course_detail', kwargs={'slug': slug})),
+                            }
+                            
+                            send_html_email(
+                                subject=f'Payment Receipt - {course.title}',
+                                template_name='emails/payment_receipt.html',
+                                context=context,
+                                recipient_list=[request.user.email],
+                                request=request
+                            )
+                        except Exception:
+                            pass
                     messages.success(request, f'Payment successful. You are now enrolled in {course.title}.')
                     first_module = course.modules.first()
                     if first_module:
@@ -623,6 +625,40 @@ def paystack_webhook(request):
                 )
                 if user and course and not Enrollment.objects.filter(student=user, course=course).exists():
                     Enrollment.objects.create(student=user, course=course)
+                    
+                    # Send Payment Receipt Email via Webhook
+                    try:
+                        amount_naira = (data.get('amount') or 0) / 100.0
+                        
+                        # Construct Start URL (Harder in webhook without request context, but we can try)
+                        # We can use the domain from SiteSettings if available or fallback
+                        start_url = reverse('course_detail', kwargs={'slug': course.slug})
+                        # Ideally prepend domain, but send_html_email handles relative URLs? No, it needs absolute for buttons usually.
+                        # Let's try to get domain from request or settings.
+                        domain = request.get_host() 
+                        protocol = 'https' if request.is_secure() else 'http'
+                        full_start_url = f"{protocol}://{domain}{start_url}"
+
+                        context = {
+                            'user': user,
+                            'course': course,
+                            'reference': reference,
+                            'amount_naira': amount_naira,
+                            'status': status_val,
+                            'paid_at': data.get('paid_at') or timezone.now(),
+                            'start_url': full_start_url,
+                        }
+                        
+                        send_html_email(
+                            subject=f'Payment Receipt - {course.title}',
+                            template_name='emails/payment_receipt.html',
+                            context=context,
+                            recipient_list=[user.email],
+                            request=request 
+                        )
+                    except Exception as e:
+                        print(f"Webhook email error: {e}")
+                        pass
             except Exception:
                 pass
         return HttpResponse(status=200)
