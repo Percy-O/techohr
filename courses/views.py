@@ -29,6 +29,7 @@ import json
 from urllib import request as urlrequest, parse as urlparse
 import time
 import tempfile
+from .utils import generate_certificate_pdf_bytes, send_certificate_email
 
 try:
     import barcode
@@ -877,7 +878,9 @@ def mark_lesson_complete(request, pk):
         
         # Generate Certificate
         if lesson.module.course.has_certificate:
-            Certificate.objects.get_or_create(student=request.user, course=lesson.module.course)
+            cert, created = Certificate.objects.get_or_create(student=request.user, course=lesson.module.course)
+            if created:
+                send_certificate_email(cert)
             messages.success(request, 'Congratulations! You have completed the course and earned a certificate.')
     
     messages.success(request, 'Lesson marked as complete!')
@@ -900,7 +903,9 @@ def mark_all_complete(request, course_slug):
     
     # Generate Certificate if applicable
     if course.has_certificate:
-        Certificate.objects.get_or_create(student=request.user, course=course)
+        cert, created = Certificate.objects.get_or_create(student=request.user, course=course)
+        if created:
+            send_certificate_email(cert)
         messages.success(request, 'Congratulations! You have completed the course and earned a certificate.')
     else:
         messages.success(request, 'All lessons marked as complete!')
@@ -1232,7 +1237,6 @@ def download_certificate(request, certificate_id):
         except Exception as e:
             print(f"Barcode error: {e}")
 
-    # Output
     pdf_bytes = pdf.output(dest='S')
     if isinstance(pdf_bytes, str):
         pdf_bytes = pdf_bytes.encode('latin-1')
@@ -1245,4 +1249,7 @@ def download_certificate(request, certificate_id):
         except:
             pass
             
-    return FileResponse(buffer, as_attachment=True, filename=f'certificate_{certificate.certificate_id}.pdf')
+    response = HttpResponse(buffer.getvalue(), content_type='application/pdf')
+    response['Content-Disposition'] = f"attachment; filename=certificate_{certificate.certificate_id}.pdf"
+    response['Content-Length'] = str(len(pdf_bytes))
+    return response
