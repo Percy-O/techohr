@@ -7,7 +7,7 @@ from django.conf import settings
 from .models import SiteSettings
 from email.mime.image import MIMEImage
 
-def send_html_email(subject, template_name, context, recipient_list, from_email=None, request=None, attachments=None):
+def send_html_email(subject, template_name, context, recipient_list, from_email=None, request=None, attachments=None, fail_silently=False):
     """
     Sends an HTML email with the brand logo embedded as a CID attachment.
     This ensures the logo is visible even on localhost or offline.
@@ -88,4 +88,4 @@ def send_html_email(subject, template_name, context, recipient_list, from_email=
             email.attach(*attachment)
 
     # Send
-    return email.send(fail_silently=True)
+    return email.send(fail_silently=fail_silently)

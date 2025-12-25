@@ -49,6 +49,7 @@ def register(request):
                 'activate_url': activate_url,
             }
             
+            email_sent = False
             try:
                 send_html_email(
                     subject=subject,
@@ -57,10 +58,13 @@ def register(request):
                     recipient_list=[user.email],
                     request=request
                 )
+                email_sent = True
             except Exception as e:
                 print(f"Error sending confirmation email: {e}")
+                messages.error(request, f"Error sending confirmation email. Please contact support. ({e})")
                 
-            # Send Notification Email to Admin
+            # Send Notification Email to Admin (only if student email sent, or regardless?)
+            # Let's try to send admin email regardless, but don't show error to user for this one.
             try:
                 dashboard_url = request.build_absolute_uri(reverse('manage_users'))
                 
@@ -79,8 +83,12 @@ def register(request):
             except Exception as e:
                 print(f"Error sending admin notification: {e}")
 
-            messages.success(request, 'Registration successful. Please check your email to confirm and activate your account.')
-            return render(request, 'users/register_success.html')
+            if email_sent:
+                messages.success(request, 'Registration successful. Please check your email to confirm and activate your account.')
+                return render(request, 'users/register_success.html')
+            else:
+                # If email failed, redirect to login (error message already added)
+                return redirect('login')
     else:
         form = UserRegisterForm()
     return render(request, 'users/register.html', {'form': form})
