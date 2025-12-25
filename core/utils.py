@@ -66,7 +66,6 @@ def send_html_email(subject, template_name, context, recipient_list, from_email=
         to=recipient_list
     )
     email.attach_alternative(html_content, "text/html")
-    # email.mixed_subtype = 'related' # Deprecated in newer Django/Python versions causing errors
 
     # Attach Logo File
     if logo_path and logo_cid:
