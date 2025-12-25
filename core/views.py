@@ -11,6 +11,7 @@ from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django.conf import settings
 from django.urls import reverse
+from .utils import send_html_email
 
 def home(request):
     services = Service.objects.all()[:6] # Increased to 6 for the grid
@@ -54,36 +55,21 @@ def contact(request):
         # Send Email Notification
         try:
             dashboard_url = request.build_absolute_uri(reverse('manage_messages'))
-            from core.models import SiteSettings
-            site_settings = SiteSettings.objects.first()
             
-            # Calculate logo_url
-            logo_url = None
-            if request:
-                 base_url = request.build_absolute_uri('/')[:-1]
-                 if site_settings and site_settings.logo_light:
-                     logo_url = f"{base_url}{site_settings.logo_light.url}"
-                 elif site_settings and site_settings.logo:
-                     logo_url = f"{base_url}{site_settings.logo.url}"
-            
-            html_message = render_to_string('emails/contact_notification.html', {
+            context = {
                 'name': name,
                 'email': email,
                 'subject': subject,
                 'message': message,
                 'dashboard_url': dashboard_url,
-                'site_settings': site_settings,
-                'logo_url': logo_url,
-            })
-            plain_message = strip_tags(html_message)
+            }
             
-            send_mail(
+            send_html_email(
                 subject=f'New Contact Message: {subject}',
-                message=plain_message,
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[settings.DEFAULT_FROM_EMAIL], # Send to admin (using default from for now)
-                html_message=html_message,
-                fail_silently=True,
+                template_name='emails/contact_notification.html',
+                context=context,
+                recipient_list=[settings.DEFAULT_FROM_EMAIL],
+                request=request
             )
         except Exception as e:
             # Log error if needed, but don't stop user flow

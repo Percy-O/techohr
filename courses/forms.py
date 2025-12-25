@@ -74,12 +74,13 @@ class CertificateSettingsForm(forms.ModelForm):
 class CourseForm(forms.ModelForm):
     class Meta:
         model = Course
-        fields = ['title', 'category', 'description', 'price', 'thumbnail', 'level', 'has_certificate', 'is_published']
+        fields = ['title', 'category', 'description', 'price', 'discounted_price', 'thumbnail', 'level', 'has_certificate', 'is_published']
         widgets = {
             'title': forms.TextInput(attrs={'class': 'w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:border-primary bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400'}),
             'category': forms.Select(attrs={'class': 'w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:border-primary bg-white dark:bg-gray-700 text-gray-900 dark:text-white'}),
             'description': forms.Textarea(attrs={'class': 'w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:border-primary bg-white dark:bg-gray-700 text-gray-900 dark:text-white', 'rows': 5}),
             'price': forms.NumberInput(attrs={'class': 'w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:border-primary bg-white dark:bg-gray-700 text-gray-900 dark:text-white'}),
+            'discounted_price': forms.NumberInput(attrs={'class': 'w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:border-primary bg-white dark:bg-gray-700 text-gray-900 dark:text-white'}),
             'level': forms.Select(attrs={'class': 'w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:border-primary bg-white dark:bg-gray-700 text-gray-900 dark:text-white'}),
             'has_certificate': forms.CheckboxInput(attrs={'class': 'w-4 h-4 text-primary border-gray-300 dark:border-gray-600 rounded focus:ring-primary bg-gray-100 dark:bg-gray-700'}),
             'is_published': forms.CheckboxInput(attrs={'class': 'w-4 h-4 text-primary border-gray-300 dark:border-gray-600 rounded focus:ring-primary bg-gray-100 dark:bg-gray-700'}),

@@ -321,13 +321,18 @@
 
                 {% else %}
                     <div class="text-3xl font-bold text-gray-900 dark:text-white mb-6 text-center">
-                        {% if course.price > 0 %}
-                            ₦{{ course.price|floatformat:0 }}
+                        {% if course.current_price > 0 %}
+                            {% if course.discounted_price and course.discounted_price < course.price %}
+                                <span class="text-xl text-gray-500 line-through mr-2">₦{{ course.price|floatformat:0 }}</span>
+                                <span>₦{{ course.current_price|floatformat:0 }}</span>
+                            {% else %}
+                                ₦{{ course.current_price|floatformat:0 }}
+                            {% endif %}
                         {% else %}
                             Free
                         {% endif %}
                     </div>
-                    {% if course.price > 0 %}
+                    {% if course.current_price > 0 %}
                     <div class="flex gap-3">
                         <a href="{% url 'enroll_course' course.slug %}" class="flex-1 py-3 bg-primary text-white font-bold text-center rounded-md hover:bg-blue-600 transition">Enroll Now</a>
                         <a href="{% url 'course_payment' course.slug %}" class="flex-1 py-3 bg-green-600 text-white font-bold text-center rounded-md hover:bg-green-700 transition">Pay Now</a>

@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib import messages
-from .forms import UserRegisterForm, ProfileForm, AdminCreationForm
+from .forms import UserRegisterForm, ProfileForm, AdminCreationForm, CustomPasswordChangeForm
 from django.contrib.auth.decorators import login_required
 from .decorators import staff_required
 from courses.models import Enrollment, Course, Certificate
@@ -20,6 +20,7 @@ from django.conf import settings
 from core.models import SiteSettings
 from core.models import PageVisit
 from django.urls import reverse
+from core.utils import send_html_email
 
 User = get_user_model()
 
@@ -42,34 +43,19 @@ def register(request):
                 reverse('activate', kwargs={'uidb64': uid, 'token': token})
             )
             
-            site_settings = SiteSettings.objects.first()
-            
-            # Calculate logo_url
-            logo_url = None
-            if request:
-                 base_url = request.build_absolute_uri('/')[:-1]
-                 if site_settings and site_settings.logo_light:
-                     logo_url = f"{base_url}{site_settings.logo_light.url}"
-                 elif site_settings and site_settings.logo:
-                     logo_url = f"{base_url}{site_settings.logo.url}"
-
-            html_message = render_to_string('emails/student_confirmation.html', {
+            context = {
                 'user': user,
                 'domain': current_site.domain,
                 'activate_url': activate_url,
-                'site_settings': site_settings,
-                'logo_url': logo_url,
-            })
-            plain_message = strip_tags(html_message)
+            }
             
             try:
-                send_mail(
-                    subject,
-                    plain_message,
-                    settings.DEFAULT_FROM_EMAIL,
-                    [user.email],
-                    html_message=html_message,
-                    fail_silently=True,
+                send_html_email(
+                    subject=subject,
+                    template_name='emails/student_confirmation.html',
+                    context=context,
+                    recipient_list=[user.email],
+                    request=request
                 )
             except Exception as e:
                 print(f"Error sending confirmation email: {e}")
@@ -77,21 +63,18 @@ def register(request):
             # Send Notification Email to Admin
             try:
                 dashboard_url = request.build_absolute_uri(reverse('manage_users'))
-                admin_html_message = render_to_string('emails/admin_new_student.html', {
+                
+                admin_context = {
                     'user': user,
                     'dashboard_url': dashboard_url,
-                    'site_settings': site_settings,
-                    'logo_url': logo_url,
-                })
-                admin_plain_message = strip_tags(admin_html_message)
+                }
                 
-                send_mail(
-                    f'New Student Registration: {user.username}',
-                    admin_plain_message,
-                    settings.DEFAULT_FROM_EMAIL,
-                    [settings.DEFAULT_FROM_EMAIL],
-                    html_message=admin_html_message,
-                    fail_silently=True,
+                send_html_email(
+                    subject=f'New Student Registration: {user.username}',
+                    template_name='emails/admin_new_student.html',
+                    context=admin_context,
+                    recipient_list=[settings.DEFAULT_FROM_EMAIL],
+                    request=request
                 )
             except Exception as e:
                 print(f"Error sending admin notification: {e}")
@@ -328,7 +311,6 @@ def admin_dashboard(request):
     return render(request, 'users/admin_dashboard.html', context)
 
 from django.core.paginator import Paginator
-from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth import update_session_auth_hash
 
 @staff_required
@@ -356,14 +338,14 @@ def create_admin_user(request):
 @login_required
 def change_password(request):
     if request.method == 'POST':
-        form = PasswordChangeForm(request.user, request.POST)
+        form = CustomPasswordChangeForm(request.user, request.POST)
         if form.is_valid():
             user = form.save()
             update_session_auth_hash(request, user)
             messages.success(request, 'Your password has been updated.')
             return redirect('profile')
     else:
-        form = PasswordChangeForm(request.user)
+        form = CustomPasswordChangeForm(request.user)
     return render(request, 'users/change_password.html', {'form': form})
 
 @staff_required

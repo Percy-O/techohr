@@ -5,11 +5,9 @@ import uuid
 from PIL import Image, ImageDraw
 from fpdf import FPDF
 from django.conf import settings as django_settings
-from django.core.mail import EmailMultiAlternatives
-from django.template.loader import render_to_string
-from django.utils.html import strip_tags
 from .models import CertificateSettings
 from core.models import SiteSettings
+from core.utils import send_html_email
 
 try:
     import barcode
@@ -351,45 +349,33 @@ def send_certificate_email(certificate, request=None):
         pdf_bytes = generate_certificate_pdf_bytes(certificate)
         user = certificate.student
         course = certificate.course
-        site_settings = SiteSettings.objects.first()
         
-        # Determine base URL for logo
-        logo_url = None
+        # Dashboard URL logic
         dashboard_url = '#'
-        
         if request:
-            protocol = 'https' if request.is_secure() else 'http'
-            domain = request.get_host()
-            base_url = f"{protocol}://{domain}"
-            
-            if site_settings and site_settings.logo_light:
-                logo_url = f"{base_url}{site_settings.logo_light.url}"
-            elif site_settings and site_settings.logo:
-                 logo_url = f"{base_url}{site_settings.logo.url}"
-                 
-            dashboard_url = f"{base_url}/dashboard/" # Assuming /dashboard/ exists
+             protocol = 'https' if request.is_secure() else 'http'
+             domain = request.get_host()
+             dashboard_url = f"{protocol}://{domain}/dashboard/"
         
         context = {
             'user': user,
             'course': course,
-            'site_settings': site_settings,
-            'logo_url': logo_url,
             'dashboard_url': dashboard_url,
         }
         
-        html_content = render_to_string('emails/certificate_email.html', context)
-        text_content = strip_tags(html_content)
+        # Attach PDF
+        attachments = [
+            (f'certificate_{certificate.certificate_id}.pdf', pdf_bytes, 'application/pdf')
+        ]
         
-        email = EmailMultiAlternatives(
+        return send_html_email(
             subject=f'Certificate of Completion - {course.title}',
-            body=text_content,
-            from_email=django_settings.DEFAULT_FROM_EMAIL,
-            to=[user.email],
+            template_name='emails/certificate_email.html',
+            context=context,
+            recipient_list=[user.email],
+            request=request,
+            attachments=attachments
         )
-        email.attach_alternative(html_content, "text/html")
-        email.attach(f'certificate_{certificate.certificate_id}.pdf', pdf_bytes, 'application/pdf')
-        email.send(fail_silently=True)
-        return True
     except Exception as e:
         print(f"Error sending certificate email: {e}")
         return False

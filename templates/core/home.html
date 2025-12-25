@@ -451,8 +451,13 @@
 
                     <div class="flex items-center justify-between mt-auto pt-4 border-t border-gray-100 dark:border-gray-800">
                         <div class="font-bold text-xl text-gray-900 dark:text-white transition-colors duration-300">
-                            {% if course.price > 0 %}
-                                ₦{{ course.price|floatformat:0 }}
+                            {% if course.current_price > 0 %}
+                                {% if course.discounted_price and course.discounted_price < course.price %}
+                                    <span class="text-sm text-gray-500 line-through mr-2">₦{{ course.price|floatformat:0 }}</span>
+                                    <span>₦{{ course.current_price|floatformat:0 }}</span>
+                                {% else %}
+                                    ₦{{ course.current_price|floatformat:0 }}
+                                {% endif %}
                             {% else %}
                                 Free
                             {% endif %}

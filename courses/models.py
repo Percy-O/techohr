@@ -28,7 +28,8 @@ class Course(models.Model):
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True)
     instructor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     description = models.TextField()
-    price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, help_text="Normal Price")
+    discounted_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, help_text="Discounted Price (if set, this will be the selling price)")
     thumbnail = models.ImageField(upload_to='courses/thumbnails/')
     level = models.CharField(max_length=20, choices=LEVEL_CHOICES, default='Beginner')
     created_at = models.DateTimeField(auto_now_add=True)
@@ -61,6 +62,12 @@ class Course(models.Model):
         # Calculate total duration from lessons
         total = sum([l.duration for m in self.modules.all() for l in m.lessons.all() if l.duration], start=timedelta(0))
         return total
+
+    @property
+    def current_price(self):
+        if self.discounted_price is not None and self.discounted_price < self.price:
+            return self.discounted_price
+        return self.price
 
 class Module(models.Model):
     course = models.ForeignKey(Course, related_name='modules', on_delete=models.CASCADE)

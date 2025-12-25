@@ -1,5 +1,5 @@
 from django import forms
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.forms import UserCreationForm, PasswordChangeForm
 from .models import User
 
 class UserRegisterForm(UserCreationForm):
@@ -34,6 +34,19 @@ class AdminCreationForm(UserCreationForm):
         fields = ['username', 'password1', 'password2']
         widgets = {
             'username': forms.TextInput(attrs={'class': 'w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary bg-transparent text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500'}),
-            'password1': forms.PasswordInput(attrs={'class': 'w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary bg-transparent text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500'}),
-            'password2': forms.PasswordInput(attrs={'class': 'w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary bg-transparent text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        password_style = 'w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary bg-transparent text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500'
+        if 'password1' in self.fields:
+            self.fields['password1'].widget.attrs.update({'class': password_style})
+        if 'password2' in self.fields:
+            self.fields['password2'].widget.attrs.update({'class': password_style})
+
+class CustomPasswordChangeForm(PasswordChangeForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        password_style = 'w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary bg-transparent text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500'
+        for field in self.fields:
+            self.fields[field].widget.attrs.update({'class': password_style})

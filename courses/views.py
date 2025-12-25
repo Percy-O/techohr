@@ -30,6 +30,7 @@ from urllib import request as urlrequest, parse as urlparse
 import time
 import tempfile
 from .utils import generate_certificate_pdf_bytes, send_certificate_email
+from core.utils import send_html_email
 
 try:
     import barcode
@@ -380,7 +381,7 @@ def init_course_payment(request, slug):
         return redirect('course_payment', slug=slug)
 
     # Ensure positive integer amount in kobo
-    amount_kobo = int(max(float(course.price), 0) * 100)
+    amount_kobo = int(max(float(course.current_price), 0) * 100)
     if amount_kobo <= 0:
         messages.error(request, 'Invalid course amount. Please contact support.')
         return redirect('course_payment', slug=slug)
@@ -416,7 +417,7 @@ def init_course_payment(request, slug):
                 return render(request, 'courses/payment_init.html', {
                     'course': course,
                     'authorization_url': res['data']['authorization_url'],
-                    'amount_naira': float(course.price),
+                    'amount_naira': float(course.current_price),
                 })
             # Show Paystack error message if available
             err_msg = res.get('message') or 'Unable to initialize payment. Please try again.'
@@ -479,17 +480,9 @@ def verify_course_payment(request, slug):
                     try:
                         site_settings = SiteSettings.objects.first()
                         
-                        # Calculate logo_url
-                        logo_url = None
-                        if request:
-                             base_url = request.build_absolute_uri('/')[:-1]
-                             if site_settings and site_settings.logo_light:
-                                 logo_url = f"{base_url}{site_settings.logo_light.url}"
-                             elif site_settings and site_settings.logo:
-                                 logo_url = f"{base_url}{site_settings.logo.url}"
-
                         amount_naira = (data.get('amount') or 0) / 100.0
-                        receipt_html = render_to_string('emails/payment_receipt.html', {
+                        
+                        context = {
                             'user': request.user,
                             'course': course,
                             'reference': data.get('reference') or reference,
@@ -497,17 +490,14 @@ def verify_course_payment(request, slug):
                             'status': data.get('status'),
                             'paid_at': data.get('paid_at') or timezone.now(),
                             'start_url': request.build_absolute_uri(reverse('course_detail', kwargs={'slug': slug})),
-                            'site_settings': site_settings,
-                            'logo_url': logo_url,
-                        })
-                        receipt_plain = strip_tags(receipt_html)
-                        send_mail(
+                        }
+                        
+                        send_html_email(
                             subject=f'Payment Receipt - {course.title}',
-                            message=receipt_plain,
-                            from_email=django_settings.DEFAULT_FROM_EMAIL,
+                            template_name='emails/payment_receipt.html',
+                            context=context,
                             recipient_list=[request.user.email],
-                            html_message=receipt_html,
-                            fail_silently=True,
+                            request=request
                         )
                     except Exception:
                         pass
@@ -554,7 +544,7 @@ def verify_course_payment(request, slug):
 def enroll_course(request, slug):
     course = get_object_or_404(Course, slug=slug)
     # For paid courses, force payment before enrollment
-    if course.price and float(course.price) > 0:
+    if course.current_price and float(course.current_price) > 0:
         messages.info(request, 'Please complete payment to access this course.')
         return redirect('course_payment', slug=slug)
 
