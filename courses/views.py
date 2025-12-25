@@ -954,7 +954,9 @@ def download_certificate(request, certificate_id):
                 logo_w = 150
                 aspect = logo.height / logo.width
                 logo_h = int(logo_w * aspect)
-                logo = logo.resize((logo_w, logo_h), Image.Resampling.LANCZOS)
+                resampling_attr = getattr(Image, 'Resampling', None)
+                resample_filter = resampling_attr.LANCZOS if resampling_attr else getattr(Image, 'LANCZOS', Image.ANTIALIAS)
+                logo = logo.resize((logo_w, logo_h), resample_filter)
                 
                 # Make logo faint (Opacity)
                 # Create a new image with alpha channel adjusted
@@ -1215,16 +1217,16 @@ def download_certificate(request, certificate_id):
                 'text_distance': 0,
             }
             code = barcode.get('code128', certificate.certificate_id, writer=ImageWriter())
-            barcode_filename = f"barcode_{certificate.certificate_id}"
-            barcode_path = code.save(barcode_filename, options=options)
+            tmp_base = os.path.join(tempfile.gettempdir(), f"barcode_{certificate.certificate_id}")
+            barcode_path = code.save(tmp_base, options=options)
             
             # Position below seal
             pdf.image(barcode_path, x=123.5, y=bottom_y + 25, w=50, h=10)
             
             # Clean up
             try:
-                os.remove(barcode_path)
-                os.remove(f"{barcode_filename}.png") 
+                if os.path.exists(barcode_path):
+                    os.remove(barcode_path)
             except:
                 pass
         except Exception as e:
