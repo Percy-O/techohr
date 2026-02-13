@@ -548,6 +548,16 @@
                         </div>
                         <p class="text-gray-600 dark:text-gray-300 text-lg leading-relaxed italic transition-colors duration-300">
                             {{ testimonial.content|truncatewords:40 }}
+                            {% if testimonial.content|wordcount > 40 %}
+                            <button @click="$dispatch('open-review-modal', { 
+                                content: '{{ testimonial.content|escapejs }}', 
+                                author: '{{ testimonial.client_name|escapejs }}', 
+                                role: '{{ testimonial.position|escapejs }}{% if testimonial.company %}, {{ testimonial.company|escapejs }}{% endif %}', 
+                                image: '{% if testimonial.image %}{{ testimonial.image.url }}{% endif %}' 
+                            })" class="text-blue-600 dark:text-blue-400 font-bold text-sm hover:underline ml-1 inline-flex items-center gap-1 cursor-pointer">
+                                Read More
+                            </button>
+                            {% endif %}
                         </p>
                     </div>
                     
@@ -782,5 +792,64 @@
         </div>
     </div>
 </section>
+
+<!-- Review Modal -->
+<div x-data="{ open: false, content: '', author: '', role: '', image: '' }"
+     @open-review-modal.window="open = true; content = $event.detail.content; author = $event.detail.author; role = $event.detail.role; image = $event.detail.image"
+     @keydown.escape.window="open = false"
+     x-show="open"
+     x-cloak
+     class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+     x-transition:enter="transition ease-out duration-300"
+     x-transition:enter-start="opacity-0"
+     x-transition:enter-end="opacity-100"
+     x-transition:leave="transition ease-in duration-200"
+     x-transition:leave-start="opacity-100"
+     x-transition:leave-end="opacity-0">
+    
+    <!-- Modal Content -->
+    <div @click.away="open = false"
+         class="bg-white dark:bg-[#1a2236] rounded-2xl shadow-2xl w-full max-w-2xl p-8 relative overflow-hidden transform transition-all"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0 scale-95 translate-y-4"
+         x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+         x-transition:leave-end="opacity-0 scale-95 translate-y-4">
+         
+        <!-- Close Button -->
+        <button @click="open = false" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors z-20">
+            <i class="fas fa-times text-xl"></i>
+        </button>
+
+        <!-- Body -->
+        <div class="flex flex-col gap-6 max-h-[80vh] overflow-y-auto custom-scrollbar">
+            <!-- Author Info -->
+            <div class="flex items-center gap-4 border-b border-gray-100 dark:border-gray-700 pb-6 sticky top-0 bg-white dark:bg-[#1a2236] z-10 pt-2">
+                 <div class="w-16 h-16 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700 flex-shrink-0 ring-4 ring-blue-50 dark:ring-blue-900/20">
+                    <template x-if="image">
+                        <img :src="image" :alt="author" class="w-full h-full object-cover">
+                    </template>
+                    <template x-if="!image">
+                        <div class="w-full h-full flex items-center justify-center bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 font-bold text-xl" x-text="author.charAt(0)"></div>
+                    </template>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold text-gray-900 dark:text-white" x-text="author"></h3>
+                    <p class="text-blue-600 dark:text-blue-400 font-medium text-sm" x-text="role"></p>
+                </div>
+            </div>
+            
+            <!-- Text -->
+            <div class="relative px-2">
+                <i class="fas fa-quote-left text-5xl text-blue-500/10 dark:text-blue-400/10 absolute -top-4 -left-2 select-none"></i>
+                <div class="prose dark:prose-invert max-w-none">
+                    <p class="text-gray-600 dark:text-gray-300 text-lg leading-relaxed relative z-10 whitespace-pre-wrap font-light" x-text="content"></p>
+                </div>
+                <i class="fas fa-quote-right text-5xl text-blue-500/10 dark:text-blue-400/10 absolute -bottom-4 -right-2 select-none"></i>
+            </div>
+        </div>
+    </div>
+</div>
 
 {% endblock %}

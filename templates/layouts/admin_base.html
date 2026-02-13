@@ -148,14 +148,19 @@
             </a>
 
             <a href="{% url 'manage_testimonials' %}" class="flex items-center px-4 py-3 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-primary dark:hover:text-white rounded-lg transition-colors duration-200 {% if 'manage_testimonials' in request.path %}bg-primary/10 dark:bg-gray-800 text-primary dark:text-white border-l-4 border-primary{% endif %}">
-                <i class="fas fa-quote-left w-6"></i>
-                <span class="font-medium">Testimonials</span>
-            </a>
+                    <i class="fas fa-quote-left w-6"></i>
+                    <span class="font-medium">Testimonials</span>
+                </a>
 
-            <a href="{% url 'manage_settings' %}" class="flex items-center px-4 py-3 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-primary dark:hover:text-white rounded-lg transition-colors duration-200 {% if 'manage/settings' in request.path %}bg-primary/10 dark:bg-gray-800 text-primary dark:text-white border-l-4 border-primary{% endif %}">
-                <i class="fas fa-cog w-6"></i>
-                <span class="font-medium">Site Settings</span>
-            </a>
+                <a href="{% url 'manage_payments' %}" class="flex items-center px-4 py-3 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-primary dark:hover:text-white rounded-lg transition-colors duration-200 {% if 'manage_payments' in request.path %}bg-primary/10 dark:bg-gray-800 text-primary dark:text-white border-l-4 border-primary{% endif %}">
+                    <i class="fas fa-credit-card w-6"></i>
+                    <span class="font-medium">Payment Settings</span>
+                </a>
+
+                <a href="{% url 'manage_settings' %}" class="flex items-center px-4 py-3 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-primary dark:hover:text-white rounded-lg transition-colors duration-200 {% if 'manage/settings' in request.path %}bg-primary/10 dark:bg-gray-800 text-primary dark:text-white border-l-4 border-primary{% endif %}">
+                    <i class="fas fa-cog w-6"></i>
+                    <span class="font-medium">Site Settings</span>
+                </a>
 
             <a href="{% url 'manage_employees' %}" class="flex items-center px-4 py-3 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-primary dark:hover:text-white rounded-lg transition-colors duration-200 {% if 'manage/employees' in request.path %}bg-primary/10 dark:bg-gray-800 text-primary dark:text-white border-l-4 border-primary{% endif %}">
                 <i class="fas fa-users-cog w-6"></i>
@@ -285,6 +290,11 @@
                 <a href="{% url 'manage_testimonials' %}" class="flex items-center px-4 py-3 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-primary dark:hover:text-white rounded-lg transition-colors duration-200 {% if 'manage_testimonials' in request.path %}bg-primary/10 dark:bg-gray-800 text-primary dark:text-white border-l-4 border-primary{% endif %}">
                     <i class="fas fa-quote-left w-6"></i>
                     <span class="font-medium">Testimonials</span>
+                </a>
+
+                <a href="{% url 'manage_payments' %}" class="flex items-center px-4 py-3 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-primary dark:hover:text-white rounded-lg transition-colors duration-200 {% if 'manage_payments' in request.path %}bg-primary/10 dark:bg-gray-800 text-primary dark:text-white border-l-4 border-primary{% endif %}">
+                    <i class="fas fa-credit-card w-6"></i>
+                    <span class="font-medium">Payment Settings</span>
                 </a>
 
                 <a href="{% url 'manage_settings' %}" class="flex items-center px-4 py-3 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-primary dark:hover:text-white rounded-lg transition-colors duration-200 {% if 'manage/settings' in request.path %}bg-primary/10 dark:bg-gray-800 text-primary dark:text-white border-l-4 border-primary{% endif %}">

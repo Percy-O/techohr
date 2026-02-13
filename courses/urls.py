@@ -36,6 +36,7 @@ urlpatterns = [
     path('manage/assessments/<int:pk>/submissions/', views.manage_submissions, name='manage_submissions'),
     path('manage/submissions/<int:pk>/grade/', views.grade_submission, name='grade_submission'),
     path('manage/payments/', views.manage_payments, name='manage_payments'),
+    path('manage/payments/settings/', views.manage_payment_settings, name='manage_payment_settings'),
     
     # Taking Assessments
     path('assessment/<int:pk>/submit/', views.submit_assessment, name='submit_assessment'),

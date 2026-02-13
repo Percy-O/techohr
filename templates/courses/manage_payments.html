@@ -2,17 +2,84 @@
 
 {% block admin_content %}
 <div class="w-full">
+    <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
+        <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-white">Payment Settings & Transactions</h1>
+        
+        <!-- Add Payment Settings Button -->
+        <a href="{% url 'manage_payment_settings' %}" class="px-4 py-2 bg-gray-900 dark:bg-gray-700 text-white rounded-lg hover:bg-gray-700 transition flex items-center gap-2 shadow-sm">
+             <i class="fas fa-key"></i> Configure Keys
+        </a>
+    </div>
+
+    <!-- Configuration Section -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 mb-8">
+        <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-4">Payment Configuration</h2>
+        
+        {% if payment_settings %}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
+                    <h3 class="font-bold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
+                        <i class="fas fa-check-circle text-green-500"></i> Paystack
+                    </h3>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span class="text-gray-500">Public Key:</span>
+                            <span class="font-mono text-gray-800 dark:text-gray-200 truncate max-w-[200px]">{{ payment_settings.paystack_public_key|default:"Not Set" }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-500">Secret Key:</span>
+                            <span class="font-mono text-gray-800 dark:text-gray-200 truncate max-w-[200px]">••••••••••••••••</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
+                    <h3 class="font-bold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
+                        <i class="fas fa-check-circle text-green-500"></i> Stripe
+                    </h3>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span class="text-gray-500">Public Key:</span>
+                            <span class="font-mono text-gray-800 dark:text-gray-200 truncate max-w-[200px]">{{ payment_settings.stripe_public_key|default:"Not Set" }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-500">Secret Key:</span>
+                            <span class="font-mono text-gray-800 dark:text-gray-200 truncate max-w-[200px]">••••••••••••••••</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-4 flex justify-end">
+                <a href="{% url 'manage_payment_settings' %}" class="text-blue-600 hover:text-blue-800 text-sm font-bold flex items-center gap-1">
+                    <i class="fas fa-edit"></i> Edit Configuration
+                </a>
+            </div>
+        {% else %}
+            <div class="text-center py-8">
+                <div class="w-16 h-16 bg-yellow-50 dark:bg-yellow-900/20 rounded-full flex items-center justify-center mx-auto mb-4 text-yellow-600 dark:text-yellow-400 text-2xl">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">No Configuration Found</h3>
+                <p class="text-gray-500 mb-4">You haven't set up your payment keys yet. Payments will not work until you configure them.</p>
+                <a href="{% url 'manage_payment_settings' %}" class="inline-flex items-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-blue-700 transition">
+                    <i class="fas fa-plus mr-2"></i> Add Configuration
+                </a>
+            </div>
+        {% endif %}
+    </div>
+
     <div class="flex justify-between items-center mb-6">
-        <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-white">Payments</h1>
+        <h2 class="text-xl font-bold text-gray-800 dark:text-white">Transaction History</h2>
         <div class="flex gap-2">
             <form method="get" class="flex gap-2">
                 <input type="text" name="q" value="{{ request.GET.q }}" placeholder="Search reference" class="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-transparent text-gray-800 dark:text-white">
                 <select name="status" class="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-transparent text-gray-800 dark:text-white">
-                    <option value="">All</option>
+                    <option value="">All Status</option>
                     <option value="success" {% if request.GET.status == 'success' %}selected{% endif %}>Success</option>
                     <option value="failed" {% if request.GET.status == 'failed' %}selected{% endif %}>Failed</option>
                 </select>
-                <button class="px-4 py-2 bg-primary text-white rounded-lg">Filter</button>
+                <button class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-blue-700 transition">Filter</button>
             </form>
         </div>
     </div>
@@ -33,23 +100,47 @@
                 <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                     {% for p in payments %}
                     <tr>
-                        <td class="px-6 py-4 text-sm text-gray-900 dark:text-white">{{ p.reference }}</td>
-                        <td class="px-6 py-4 text-sm text-gray-900 dark:text-white">{{ p.user.username }}</td>
-                        <td class="px-6 py-4 text-sm text-gray-900 dark:text-white">{{ p.course.title }}</td>
-                        <td class="px-6 py-4 text-sm text-gray-900 dark:text-white">₦{% widthratio p.amount 100 1 %}</td>
-                        <td class="px-6 py-4 text-sm">
-                            <span class="px-2 py-1 rounded-full text-xs font-bold {% if p.status == 'success' %}bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300{% else %}bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300{% endif %}">{{ p.status }}</span>
+                        <td class="px-6 py-4 text-sm font-mono text-gray-900 dark:text-white">{{ p.reference }}</td>
+                        <td class="px-6 py-4 text-sm text-gray-900 dark:text-white">
+                            <div class="font-bold">{{ p.user.username }}</div>
+                            <div class="text-xs text-gray-500">{{ p.user.email }}</div>
                         </td>
-                        <td class="px-6 py-4 text-sm text-gray-900 dark:text-white">{{ p.paid_at }}</td>
+                        <td class="px-6 py-4 text-sm text-gray-900 dark:text-white">{{ p.course.title }}</td>
+                        <td class="px-6 py-4 text-sm font-bold text-gray-900 dark:text-white">₦{% widthratio p.amount 100 1 %}</td>
+                        <td class="px-6 py-4 text-sm">
+                            <span class="px-2 py-1 rounded-full text-xs font-bold {% if p.status == 'success' %}bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300{% else %}bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300{% endif %}">{{ p.status|title }}</span>
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">{{ p.paid_at|date:"M d, Y H:i" }}</td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="6" class="px-6 py-8 text-center text-gray-500 dark:text-gray-400">No payments found</td>
+                        <td colspan="6" class="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                            <i class="fas fa-receipt text-4xl mb-3 text-gray-300 dark:text-gray-600 block"></i>
+                            No transaction records found
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
+        
+        {% if payments.has_other_pages %}
+        <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-center">
+            <div class="flex gap-2">
+                {% if payments.has_previous %}
+                    <a href="?page={{ payments.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}" class="px-3 py-1 bg-gray-100 dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600 text-sm">Previous</a>
+                {% endif %}
+                
+                <span class="px-3 py-1 text-sm text-gray-600 dark:text-gray-400">
+                    Page {{ payments.number }} of {{ payments.paginator.num_pages }}
+                </span>
+                
+                {% if payments.has_next %}
+                    <a href="?page={{ payments.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}" class="px-3 py-1 bg-gray-100 dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600 text-sm">Next</a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

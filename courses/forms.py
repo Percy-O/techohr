@@ -1,5 +1,16 @@
 from django import forms
-from .models import Course, Module, Lesson, CertificateSettings, Review, Assessment, Question, Choice, Submission
+from .models import Course, Module, Lesson, CertificateSettings, Review, Assessment, Question, Choice, Submission, PaymentSettings
+
+class PaymentSettingsForm(forms.ModelForm):
+    class Meta:
+        model = PaymentSettings
+        fields = ['paystack_public_key', 'paystack_secret_key', 'stripe_public_key', 'stripe_secret_key']
+        widgets = {
+            'paystack_public_key': forms.TextInput(attrs={'class': 'w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:border-primary bg-white dark:bg-gray-700 text-gray-900 dark:text-white', 'placeholder': 'pk_live_...'}),
+            'paystack_secret_key': forms.TextInput(attrs={'class': 'w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:border-primary bg-white dark:bg-gray-700 text-gray-900 dark:text-white', 'placeholder': 'sk_live_...'}),
+            'stripe_public_key': forms.TextInput(attrs={'class': 'w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:border-primary bg-white dark:bg-gray-700 text-gray-900 dark:text-white', 'placeholder': 'pk_live_...'}),
+            'stripe_secret_key': forms.TextInput(attrs={'class': 'w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:border-primary bg-white dark:bg-gray-700 text-gray-900 dark:text-white', 'placeholder': 'sk_live_...'}),
+        }
 
 class ReviewForm(forms.ModelForm):
     class Meta:

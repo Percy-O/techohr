@@ -6,6 +6,25 @@ from datetime import timedelta
 from django.urls import reverse
 import uuid
 
+class PaymentSettings(models.Model):
+    paystack_public_key = models.CharField(max_length=255, blank=True, null=True)
+    paystack_secret_key = models.CharField(max_length=255, blank=True, null=True)
+    stripe_public_key = models.CharField(max_length=255, blank=True, null=True)
+    stripe_secret_key = models.CharField(max_length=255, blank=True, null=True)
+    
+    class Meta:
+        verbose_name = "Payment Settings"
+        verbose_name_plural = "Payment Settings"
+
+    def __str__(self):
+        return "Payment Configuration"
+
+    def save(self, *args, **kwargs):
+        if not self.pk and PaymentSettings.objects.exists():
+            # If you want to prevent more than one object
+            raise Exception("There can be only one PaymentSettings instance")
+        return super(PaymentSettings, self).save(*args, **kwargs)
+
 class Category(models.Model):
     name = models.CharField(max_length=100)
     slug = models.SlugField(unique=True)

@@ -2,7 +2,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from users.decorators import staff_required
 from .models import Course, Lesson, Enrollment, Module, LessonCompletion, Certificate, Category, Review, CertificateSettings, Assessment, Question, Choice, Submission, StudentAnswer
-from .forms import CourseForm, ModuleForm, LessonForm, CertificateSettingsForm, ReviewForm, AssessmentForm, QuestionForm, ChoiceForm, SubmissionForm, SubmissionGradingForm
+from .forms import CourseForm, ModuleForm, LessonForm, CertificateSettingsForm, ReviewForm, AssessmentForm, QuestionForm, ChoiceForm, SubmissionForm, SubmissionGradingForm, PaymentSettingsForm
 from django.contrib import messages
 from django.utils import timezone
 from django.utils.text import slugify
@@ -19,7 +19,7 @@ from django.http import HttpResponse
 from urllib.error import HTTPError, URLError
 from django.urls import reverse
 from core.models import SiteSettings
-from .models import Payment
+from .models import Payment, PaymentSettings
 import uuid
 from fpdf import FPDF
 import io
@@ -37,6 +37,44 @@ try:
     from barcode.writer import ImageWriter
 except ImportError:
     barcode = None
+
+def get_paystack_keys():
+    payment_settings = PaymentSettings.objects.first()
+    pk = payment_settings.paystack_public_key if payment_settings else None
+    sk = payment_settings.paystack_secret_key if payment_settings else None
+    
+    # Fallback to settings if not in DB
+    if not pk:
+        pk = getattr(django_settings, 'PAYSTACK_PUBLIC_KEY', None)
+    if not sk:
+        sk = getattr(django_settings, 'PAYSTACK_SECRET_KEY', None)
+        
+    return pk, sk
+
+@staff_required
+def manage_payment_settings(request):
+    settings = PaymentSettings.objects.first()
+    if not settings:
+        settings = PaymentSettings()
+    
+    if request.method == 'POST':
+        # If it doesn't exist in DB, create it
+        if not settings.pk:
+            form = PaymentSettingsForm(request.POST)
+        else:
+            form = PaymentSettingsForm(request.POST, instance=settings)
+            
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Payment settings updated successfully!')
+            return redirect('manage_payment_settings')
+    else:
+        if not settings.pk:
+            form = PaymentSettingsForm()
+        else:
+            form = PaymentSettingsForm(instance=settings)
+            
+    return render(request, 'courses/manage_payment_settings.html', {'form': form})
 
 @staff_required
 def create_module_assessment(request, module_pk):
@@ -225,13 +263,27 @@ def manage_submissions(request, pk):
 @staff_required
 def manage_payments(request):
     payments = Payment.objects.all().order_by('-paid_at')
+    
+    # Get payment settings for display
+    payment_settings = PaymentSettings.objects.first()
+    
     status = request.GET.get('status')
     if status:
         payments = payments.filter(status=status)
     query = request.GET.get('q')
     if query:
         payments = payments.filter(reference__icontains=query)
-    return render(request, 'courses/manage_payments.html', {'payments': payments})
+        
+    # Add pagination
+    from django.core.paginator import Paginator
+    paginator = Paginator(payments, 20) # Show 20 payments per page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    return render(request, 'courses/manage_payments.html', {
+        'payments': page_obj,
+        'payment_settings': payment_settings
+    })
 
 @staff_required
 def grade_submission(request, pk):
@@ -376,7 +428,9 @@ def init_course_payment(request, slug):
     if course.price <= 0:
         return redirect('enroll_course', slug=slug)
 
-    if not django_settings.PAYSTACK_SECRET_KEY or django_settings.PAYSTACK_SECRET_KEY == 'PAYSTACK_SECRET_KEY':
+    paystack_public_key, paystack_secret_key = get_paystack_keys()
+
+    if not paystack_secret_key or paystack_secret_key == 'PAYSTACK_SECRET_KEY':
         messages.error(request, 'Payment not configured. Please set PAYSTACK keys.')
         return redirect('course_payment', slug=slug)
 
@@ -405,7 +459,7 @@ def init_course_payment(request, slug):
         data=data,
         headers={
             'Content-Type': 'application/json',
-            'Authorization': f"Bearer {django_settings.PAYSTACK_SECRET_KEY}"
+            'Authorization': f"Bearer {paystack_secret_key}"
         },
         method='POST'
     )
@@ -446,13 +500,16 @@ def verify_course_payment(request, slug):
     if not reference:
         messages.error(request, 'Payment verification failed: missing reference.')
         return redirect('course_detail', slug=slug)
+    
+    paystack_public_key, paystack_secret_key = get_paystack_keys()
+
     # Retry verification a few times to allow Paystack to finalize the transaction
     attempts = 6
     last_error_message = None
     for i in range(attempts):
         verify_req = urlrequest.Request(
             f'https://api.paystack.co/transaction/verify/{urlparse.quote(reference)}',
-            headers={'Authorization': f"Bearer {django_settings.PAYSTACK_SECRET_KEY}"},
+            headers={'Authorization': f"Bearer {paystack_secret_key}"},
             method='GET'
         )
         try:
@@ -555,7 +612,10 @@ def course_payment(request, slug):
     course = get_object_or_404(Course, slug=slug, is_published=True)
     if course.price <= 0:
         return redirect('enroll_course', slug=slug)
-    keys_ready = bool(django_settings.PAYSTACK_PUBLIC_KEY and django_settings.PAYSTACK_PUBLIC_KEY != 'PAYSTACK_PUBLIC_KEY' and django_settings.PAYSTACK_SECRET_KEY and django_settings.PAYSTACK_SECRET_KEY != 'PAYSTACK_SECRET_KEY')
+    
+    paystack_public_key, paystack_secret_key = get_paystack_keys()
+
+    keys_ready = bool(paystack_public_key and paystack_public_key != 'PAYSTACK_PUBLIC_KEY' and paystack_secret_key and paystack_secret_key != 'PAYSTACK_SECRET_KEY')
     try:
         amount_kobo = int(Decimal(str(course.price)) * 100)
     except Exception:
@@ -565,7 +625,7 @@ def course_payment(request, slug):
         'amount_naira': float(course.price),
         'amount_kobo': amount_kobo,
         'keys_ready': keys_ready,
-        'public_key': django_settings.PAYSTACK_PUBLIC_KEY if keys_ready else '',
+        'public_key': paystack_public_key if keys_ready else '',
     })
 
     # Check if already enrolled
@@ -591,8 +651,11 @@ def paystack_webhook(request):
         signature = request.headers.get('X-Paystack-Signature') or request.META.get('HTTP_X_PAYSTACK_SIGNATURE')
         if not signature:
             return HttpResponse(status=400)
+        
+        paystack_public_key, paystack_secret_key = get_paystack_keys()
+        
         computed = hmac.new(
-            key=django_settings.PAYSTACK_SECRET_KEY.encode('utf-8'),
+            key=paystack_secret_key.encode('utf-8'),
             msg=body,
             digestmod=hashlib.sha512
         ).hexdigest()

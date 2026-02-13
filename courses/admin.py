@@ -1,6 +1,16 @@
 from django.contrib import admin
 from .models import Category, Course, Module, Lesson, Enrollment, Review, Certificate, LessonCompletion, CertificateSettings, Assessment, Question, Choice, Submission, StudentAnswer
-from .models import Payment
+from .models import Payment, PaymentSettings
+
+@admin.register(PaymentSettings)
+class PaymentSettingsAdmin(admin.ModelAdmin):
+    list_display = ('__str__', 'paystack_public_key', 'stripe_public_key')
+    
+    def has_add_permission(self, request):
+        # Allow adding only if no instance exists
+        if self.model.objects.exists():
+            return False
+        return super().has_add_permission(request)
 
 class ChoiceInline(admin.TabularInline):
     model = Choice
