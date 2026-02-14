@@ -518,39 +518,37 @@ def verify_course_payment(request, slug):
                 res = json.loads(body)
                 data = res.get('data') or {}
                 status_val = str(data.get('status') or '').lower()
-                if res.get('status') and (status_val == 'success' or status_val == 'successful'):
-                    try:
-                        Payment.objects.get_or_create(
-                            reference=data.get('reference') or reference or '',
-                            defaults={
-                                'user': request.user,
-                                'course': course,
-                                'amount': data.get('amount') or 0,
-                                'status': data.get('status') or 'success',
-                                'raw': data,
-                            }
-                        )
-                    except Exception:
-                        pass
+                
+                # Check for explicit success status
+                if res.get('status') is True and status_val == 'success':
+                    # Create Payment record
+                    Payment.objects.get_or_create(
+                        reference=data.get('reference') or reference or '',
+                        defaults={
+                            'user': request.user,
+                            'course': course,
+                            'amount': data.get('amount') or 0,
+                            'status': 'success', # Normalize status
+                            'raw': data,
+                        }
+                    )
+                    
+                    # Ensure Enrollment
                     if not Enrollment.objects.filter(student=request.user, course=course).exists():
                         Enrollment.objects.create(student=request.user, course=course)
                         
-                        # Only send email on new enrollment to prevent duplicates
+                        # Send Receipt Email
                         try:
-                            site_settings = SiteSettings.objects.first()
-                            
                             amount_naira = (data.get('amount') or 0) / 100.0
-                            
                             context = {
                                 'user': request.user,
                                 'course': course,
                                 'reference': data.get('reference') or reference,
                                 'amount_naira': amount_naira,
-                                'status': data.get('status'),
+                                'status': 'success',
                                 'paid_at': data.get('paid_at') or timezone.now(),
                                 'start_url': request.build_absolute_uri(reverse('course_detail', kwargs={'slug': slug})),
                             }
-                            
                             send_html_email(
                                 subject=f'Payment Receipt - {course.title}',
                                 template_name='emails/payment_receipt.html',
@@ -560,42 +558,42 @@ def verify_course_payment(request, slug):
                             )
                         except Exception:
                             pass
+                            
                     messages.success(request, f'Payment successful. You are now enrolled in {course.title}.')
+                    
+                    # Redirect to first lesson
                     first_module = course.modules.first()
                     if first_module:
                         first_lesson = first_module.lessons.first()
                         if first_lesson:
                             return redirect('lesson_detail', course_slug=course.slug, lesson_slug=first_lesson.slug)
                     return redirect('course_detail', slug=slug)
-                # Record message and retry if status not success
-                last_error_message = res.get('message') or (data.get('gateway_response') if isinstance(data, dict) else None) or 'Payment not successful or pending.'
+                
+                # If status is not success yet, wait and retry
+                last_error_message = res.get('message') or (data.get('gateway_response') if isinstance(data, dict) else None) or 'Payment pending or not successful.'
+                
         except HTTPError as e:
             try:
                 err_body = e.read().decode('utf-8')
                 err_json = json.loads(err_body)
                 last_error_message = err_json.get('message') or 'Payment verification error.'
             except Exception:
-                last_error_message = 'Payment verification error.'
-        except URLError:
-            last_error_message = 'Network error contacting Paystack during verification.'
-        except Exception:
-            last_error_message = 'Payment verification failed due to an unexpected error.'
+                last_error_message = f'Payment verification error: {e.code}'
+        except Exception as e:
+            last_error_message = f'Payment verification failed: {str(e)}'
+            
         # Wait before next attempt (incremental backoff)
-        time.sleep(i + 1)
-    try:
-        payment = Payment.objects.filter(reference=reference).first()
-        if payment and str(payment.status).lower() in ('success', 'successful'):
-            if not Enrollment.objects.filter(student=request.user, course=course).exists():
-                Enrollment.objects.create(student=request.user, course=course)
-            messages.success(request, f'Payment confirmed. You are now enrolled in {course.title}.')
-            first_module = course.modules.first()
-            if first_module:
-                first_lesson = first_module.lessons.first()
-                if first_lesson:
-                    return redirect('lesson_detail', course_slug=course.slug, lesson_slug=first_lesson.slug)
-            return redirect('course_detail', slug=slug)
-    except Exception:
-        pass
+        if i < attempts - 1:
+            time.sleep(i + 1)
+            
+    # Final check: Maybe webhook handled it while we were waiting?
+    payment = Payment.objects.filter(reference=reference).first()
+    if payment and str(payment.status).lower() in ('success', 'successful'):
+        if not Enrollment.objects.filter(student=request.user, course=course).exists():
+            Enrollment.objects.create(student=request.user, course=course)
+        messages.success(request, f'Payment confirmed. You are now enrolled in {course.title}.')
+        return redirect('course_detail', slug=slug)
+
     messages.error(request, last_error_message or 'Payment verification failed. Please contact support.')
     return redirect('course_detail', slug=slug)
 
@@ -617,12 +615,13 @@ def course_payment(request, slug):
 
     keys_ready = bool(paystack_public_key and paystack_public_key != 'PAYSTACK_PUBLIC_KEY' and paystack_secret_key and paystack_secret_key != 'PAYSTACK_SECRET_KEY')
     try:
-        amount_kobo = int(Decimal(str(course.price)) * 100)
+        # Use current_price to handle discounts
+        amount_kobo = int(Decimal(str(course.current_price)) * 100)
     except Exception:
-        amount_kobo = int(float(course.price) * 100)
+        amount_kobo = int(float(course.current_price) * 100)
     return render(request, 'courses/course_payment.html', {
         'course': course,
-        'amount_naira': float(course.price),
+        'amount_naira': float(course.current_price),
         'amount_kobo': amount_kobo,
         'keys_ready': keys_ready,
         'public_key': paystack_public_key if keys_ready else '',
