@@ -598,12 +598,29 @@ def verify_course_payment(request, slug):
     return redirect('course_detail', slug=slug)
 
 @login_required
+@login_required
 def enroll_course(request, slug):
     course = get_object_or_404(Course, slug=slug)
     # For paid courses, force payment before enrollment
     if course.current_price and float(course.current_price) > 0:
         messages.info(request, 'Please complete payment to access this course.')
         return redirect('course_payment', slug=slug)
+    
+    # For free courses, enroll directly
+    if not Enrollment.objects.filter(student=request.user, course=course).exists():
+        Enrollment.objects.create(student=request.user, course=course)
+        messages.success(request, f"You have successfully enrolled in {course.title}!")
+    
+    # Redirect to the first lesson
+    first_module = course.modules.first()
+    if first_module:
+        first_lesson = first_module.lessons.first()
+        if first_lesson:
+            return redirect('lesson_detail', course_slug=course.slug, lesson_slug=first_lesson.slug)
+            
+    # Fallback if no lessons found
+    messages.info(request, "Course content is coming soon.")
+    return redirect('course_detail', slug=slug)
 
 @login_required
 def course_payment(request, slug):
