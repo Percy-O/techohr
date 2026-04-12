@@ -504,8 +504,16 @@ def verify_course_payment(request, slug):
     paystack_public_key, paystack_secret_key = get_paystack_keys()
 
     # Retry verification a few times to allow Paystack to finalize the transaction
-    attempts = 6
+    attempts = 5
     last_error_message = None
+    
+    # Check if payment already exists (webhook might have already processed it)
+    existing_payment = Payment.objects.filter(reference=reference).first()
+    if existing_payment and existing_payment.status.lower() in ['success', 'successful', 'successfull']:
+        if not Enrollment.objects.filter(student=request.user, course=course).exists():
+             Enrollment.objects.get_or_create(student=request.user, course=course)
+        return redirect('payment_success', slug=slug)
+
     for i in range(attempts):
         verify_req = urlrequest.Request(
             f'https://api.paystack.co/transaction/verify/{urlparse.quote(reference)}',
@@ -519,16 +527,16 @@ def verify_course_payment(request, slug):
                 data = res.get('data') or {}
                 status_val = str(data.get('status') or '').lower()
                 
-                # Check for explicit success status
-                if res.get('status') is True and status_val == 'success':
-                    # Create Payment record
-                    Payment.objects.get_or_create(
+                # Broaden the success check to handle common variations
+                if res.get('status') is True and status_val in ['success', 'successful', 'successfull']:
+                    # Create or update Payment record
+                    payment, created = Payment.objects.get_or_create(
                         reference=data.get('reference') or reference or '',
                         defaults={
                             'user': request.user,
                             'course': course,
                             'amount': data.get('amount') or 0,
-                            'status': 'success', # Normalize status
+                            'status': 'success',
                             'raw': data,
                         }
                     )
@@ -556,46 +564,54 @@ def verify_course_payment(request, slug):
                                 recipient_list=[request.user.email],
                                 request=request
                             )
-                        except Exception:
-                            pass
+                        except Exception as email_err:
+                            print(f"Error sending receipt email: {email_err}")
                             
                     messages.success(request, f'Payment successful. You are now enrolled in {course.title}.')
-                    
-                    # Redirect to first lesson
-                    first_module = course.modules.first()
-                    if first_module:
-                        first_lesson = first_module.lessons.first()
-                        if first_lesson:
-                            return redirect('lesson_detail', course_slug=course.slug, lesson_slug=first_lesson.slug)
-                    return redirect('course_detail', slug=slug)
+                    return redirect('payment_success', slug=slug)
                 
-                # If status is not success yet, wait and retry
                 last_error_message = res.get('message') or (data.get('gateway_response') if isinstance(data, dict) else None) or 'Payment pending or not successful.'
                 
-        except HTTPError as e:
-            try:
-                err_body = e.read().decode('utf-8')
-                err_json = json.loads(err_body)
-                last_error_message = err_json.get('message') or 'Payment verification error.'
-            except Exception:
-                last_error_message = f'Payment verification error: {e.code}'
+        except (HTTPError, URLError) as e:
+            last_error_message = f"Connection error: {str(e)}"
         except Exception as e:
-            last_error_message = f'Payment verification failed: {str(e)}'
+            last_error_message = f"Verification failed: {str(e)}"
             
-        # Wait before next attempt (incremental backoff)
+        # Wait before next attempt
         if i < attempts - 1:
-            time.sleep(i + 1)
+            time.sleep(2)
             
-    # Final check: Maybe webhook handled it while we were waiting?
+    # Final check before failing
     payment = Payment.objects.filter(reference=reference).first()
-    if payment and str(payment.status).lower() in ('success', 'successful'):
+    if payment and payment.status.lower() in ['success', 'successful', 'successfull']:
         if not Enrollment.objects.filter(student=request.user, course=course).exists():
             Enrollment.objects.create(student=request.user, course=course)
-        messages.success(request, f'Payment confirmed. You are now enrolled in {course.title}.')
-        return redirect('course_detail', slug=slug)
+        return redirect('payment_success', slug=slug)
 
-    messages.error(request, last_error_message or 'Payment verification failed. Please contact support.')
+    messages.error(request, f"Verification Error: {last_error_message or 'Please check your dashboard or contact support.'}")
     return redirect('course_detail', slug=slug)
+
+@login_required
+def payment_success(request, slug):
+    course = get_object_or_404(Course, slug=slug)
+    # Find the latest successful payment for this user and course
+    payment = Payment.objects.filter(
+        user=request.user, 
+        course=course, 
+        status__in=['success', 'successful', 'successfull']
+    ).order_by('-paid_at').first()
+    
+    if not payment and not Enrollment.objects.filter(student=request.user, course=course).exists():
+        messages.warning(request, "No successful payment found for this course.")
+        return redirect('course_detail', slug=slug)
+    
+    amount_naira = (payment.amount / 100.0) if payment else float(course.current_price)
+    
+    return render(request, 'courses/payment_success.html', {
+        'course': course,
+        'payment': payment,
+        'amount_naira': amount_naira
+    })
 
 @login_required
 @login_required

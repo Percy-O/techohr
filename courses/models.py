@@ -55,6 +55,10 @@ class Course(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     is_published = models.BooleanField(default=False)
     
+    # Product Type
+    is_digital_product = models.BooleanField(default=False, help_text="Check if this is a stand-alone digital product (e.g. eBook) instead of a course.")
+    digital_file = models.FileField(upload_to='courses/products/', blank=True, null=True, help_text="The file students can download after purchase if this is a digital product.")
+
     # Certificate Settings
     has_certificate = models.BooleanField(default=True)
 

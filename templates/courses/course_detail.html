@@ -21,8 +21,9 @@
                 <p class="text-lg text-gray-600 dark:text-gray-300 mb-6">{{ course.description|striptags|truncatewords:30 }}</p>
                 <div class="flex items-center space-x-4 mb-6 text-sm">
                     <span class="flex items-center"><i class="fas fa-signal mr-2 text-primary"></i> {{ course.level }}</span>
-                    <!-- Placeholder duration could be calculated from lessons -->
+                    {% if not course.is_digital_product %}
                     <span class="flex items-center"><i class="fas fa-clock mr-2 text-primary"></i> {{ course.modules.count }} Modules</span> 
+                    {% endif %}
                     <span class="flex items-center"><i class="fas fa-user mr-2 text-primary"></i> {{ course.instructor.username }}</span>
                 </div>
             </div>
@@ -36,12 +37,29 @@
         <!-- Main Content -->
         <div class="lg:w-2/3">
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-8 mb-8 border border-gray-200 dark:border-gray-700 transition-colors duration-300">
-                <h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">About This Course</h2>
+                <h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">{% if course.is_digital_product %}Product Details{% else %}About This Course{% endif %}</h2>
                 <div class="prose dark:prose-invert max-w-none text-gray-700 dark:text-gray-300">
                     {{ course.description|safe }}
                 </div>
             </div>
 
+            {% if course.is_digital_product and is_enrolled %}
+            <div class="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl shadow-xl p-8 mb-8 text-white transition-all transform hover:scale-[1.01]">
+                <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+                    <div>
+                        <h2 class="text-2xl font-bold mb-2">Ready to download?</h2>
+                        <p class="text-blue-100 italic">Your digital product is ready. Thank you for your purchase!</p>
+                    </div>
+                    {% if course.digital_file %}
+                    <a href="{{ course.digital_file.url }}" download class="bg-white text-blue-700 font-extrabold px-8 py-4 rounded-xl shadow-lg hover:bg-gray-100 transition-all flex items-center">
+                        <i class="fas fa-download mr-2"></i> Download Now
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            {% if not course.is_digital_product %}
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-8 border border-gray-200 dark:border-gray-700 transition-colors duration-300">
                 <h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Course Content</h2>
                 
@@ -165,6 +183,7 @@
                     {% endfor %}
                 </div>
             </div>
+            {% endif %}
 
             <!-- Reviews Section -->
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-8 mt-8 border border-gray-200 dark:border-gray-700 transition-colors duration-300">
@@ -447,5 +466,17 @@
             });
         }
     });
+
+    // Meta Pixel ViewContent Tracking
+    if (typeof fbq !== 'undefined') {
+        fbq('track', 'ViewContent', {
+            content_name: '{{ course.title }}',
+            content_category: '{{ course.category.name|default:"General" }}',
+            content_ids: ['{{ course.id }}'],
+            content_type: 'product',
+            value: {{ course.current_price }},
+            currency: 'NGN'
+        });
+    }
 </script>
 {% endblock %}

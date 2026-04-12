@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Payment Successful - {{ course.title }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-3xl w-full space-y-8 bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-2xl border border-gray-100 dark:border-gray-700 animate-fade-in-up">
+        <div class="text-center">
+            <div class="mx-auto flex items-center justify-center h-24 w-24 rounded-full bg-green-100 dark:bg-green-900 mb-6">
+                <i class="fas fa-check-circle text-5xl text-green-600 dark:text-green-400"></i>
+            </div>
+            <h2 class="text-4xl font-extrabold text-gray-900 dark:text-white mb-2">
+                Order Successful!
+            </h2>
+            <p class="text-lg text-gray-600 dark:text-gray-400">
+                Thank you for your purchase. Your payment for <span class="font-semibold text-primary">"{{ course.title }}"</span> has been processed successfully.
+            </p>
+        </div>
+
+        <div class="mt-8 bg-gray-50 dark:bg-gray-700/50 rounded-xl p-6 border border-gray-100 dark:border-gray-600">
+            <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4">Order Details</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Reference Number</p>
+                    <p class="text-base font-medium text-gray-900 dark:text-white font-mono">{{ payment.reference }}</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Amount Paid</p>
+                    <p class="text-base font-medium text-gray-900 dark:text-white">NGN {{ amount_naira|floatformat:2 }}</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Date & Time</p>
+                    <p class="text-base font-medium text-gray-900 dark:text-white">{{ payment.paid_at|date:"F j, Y, g:i a" }}</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Item Type</p>
+                    <p class="text-base font-medium text-gray-900 dark:text-white">
+                        {% if course.is_digital_product %}Digital Product{% else %}Online Course{% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
+            {% if course.is_digital_product and course.digital_file %}
+            <a href="{{ course.digital_file.url }}" download class="flex items-center justify-center px-8 py-4 border border-transparent text-base font-bold rounded-xl text-white bg-secondary hover:bg-green-600 transition-all transform hover:scale-105 shadow-lg">
+                <i class="fas fa-download mr-2"></i> Download Product
+            </a>
+            {% endif %}
+            
+            <a href="{% if course.is_digital_product %}#{% else %}{% url 'course_detail' course.slug %}{% endif %}" class="flex items-center justify-center px-8 py-4 border border-transparent text-base font-bold rounded-xl text-white bg-primary hover:bg-blue-700 transition-all transform hover:scale-105 shadow-lg">
+                <i class="fas fa-play-circle mr-2"></i> {% if course.is_digital_product %}Access Dashboard{% else %}Start Learning Now{% endif %}
+            </a>
+            
+            <a href="{% url 'home' %}" class="flex items-center justify-center px-8 py-4 border border-gray-300 dark:border-gray-600 text-base font-semibold rounded-xl text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all">
+                Back to Home
+            </a>
+        </div>
+
+        <div class="mt-8 text-center text-sm text-gray-500 dark:text-gray-400">
+            <p>A confirmation email has been sent to {{ user.email }}.</p>
+            <p class="mt-2">Need help? <a href="{% url 'contact' %}" class="text-primary hover:underline">Contact Support</a></p>
+        </div>
+    </div>
+</div>
+
+{% block extra_scripts %}
+<script>
+    // Meta Pixel Purchase Tracking
+    if (typeof fbq !== 'undefined') {
+        fbq('track', 'Purchase', {
+            value: {{ amount_naira }},
+            currency: 'NGN',
+            content_name: '{{ course.title }}',
+            content_type: 'product',
+            content_ids: ['{{ course.id }}']
+        });
+    }
+</script>
+{% endblock %}
+{% endblock %}

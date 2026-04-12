@@ -51,4 +51,19 @@
         </div>
     </div>
 </div>
+
+{% block extra_scripts %}
+<script>
+    // Meta Pixel InitiateCheckout Tracking
+    if (typeof fbq !== 'undefined') {
+        fbq('track', 'InitiateCheckout', {
+            value: {{ amount_naira }},
+            currency: 'NGN',
+            content_name: '{{ course.title }}',
+            content_category: 'Courses',
+            content_ids: ['{{ course.id }}']
+        });
+    }
+</script>
+{% endblock %}
 {% endblock %}

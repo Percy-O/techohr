@@ -48,7 +48,15 @@
             s.parentNode.insertBefore(t, s)
         }(window, document, 'script',
             'https://connect.facebook.net/en_US/fbevents.js');
+        {% if user.is_authenticated %}
+        fbq('init', '1294358669462857', {
+            em: '{{ user.email|lower }}',
+            fn: '{{ user.first_name|lower }}',
+            ln: '{{ user.last_name|lower }}'
+        });
+        {% else %}
         fbq('init', '1294358669462857');
+        {% endif %}
         fbq('track', 'PageView');
     </script>
     <noscript><img height="1" width="1" style="display:none"
