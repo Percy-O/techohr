@@ -27,6 +27,7 @@ import os
 from PIL import Image, ImageDraw, ImageEnhance # Import PIL
 import json
 from urllib import request as urlrequest, parse as urlparse
+import requests
 import time
 import tempfile
 from .utils import generate_certificate_pdf_bytes, send_certificate_email
@@ -515,64 +516,76 @@ def verify_course_payment(request, slug):
         return redirect('payment_success', slug=slug)
 
     for i in range(attempts):
-        verify_req = urlrequest.Request(
-            f'https://api.paystack.co/transaction/verify/{urlparse.quote(reference)}',
-            headers={'Authorization': f"Bearer {paystack_secret_key}"},
-            method='GET'
-        )
+        url = f"https://api.paystack.co/transaction/verify/{urlparse.quote(reference)}"
+        headers = {
+            "Authorization": f"Bearer {paystack_secret_key}",
+            "Content-Type": "application/json",
+            "User-Agent": "TechOHR-LMS/1.0",
+            "Accept": "application/json",
+        }
+        
         try:
-            with urlrequest.urlopen(verify_req) as resp:
-                body = resp.read().decode('utf-8')
-                res = json.loads(body)
-                data = res.get('data') or {}
-                status_val = str(data.get('status') or '').lower()
+            response = requests.get(url, headers=headers, timeout=10)
+            
+            # If we get a 403, it's definitely a configuration or header issue
+            if response.status_code == 403:
+                last_error_message = f"Connection error: HTTP Error 403: Forbidden - Paystack rejected the request headers."
+                if i < attempts - 1:
+                    time.sleep(2)
+                    continue
+                break
+
+            response.raise_for_status()
+            res = response.json()
+            data = res.get('data') or {}
+            status_val = str(data.get('status') or '').lower()
+            
+            # Broaden the success check to handle common variations
+            if res.get('status') is True and status_val in ['success', 'successful', 'successfull']:
+                # Create or update Payment record
+                payment, created = Payment.objects.get_or_create(
+                    reference=data.get('reference') or reference or '',
+                    defaults={
+                        'user': request.user,
+                        'course': course,
+                        'amount': data.get('amount') or 0,
+                        'status': 'success',
+                        'raw': data,
+                    }
+                )
                 
-                # Broaden the success check to handle common variations
-                if res.get('status') is True and status_val in ['success', 'successful', 'successfull']:
-                    # Create or update Payment record
-                    payment, created = Payment.objects.get_or_create(
-                        reference=data.get('reference') or reference or '',
-                        defaults={
+                # Ensure Enrollment
+                if not Enrollment.objects.filter(student=request.user, course=course).exists():
+                    Enrollment.objects.create(student=request.user, course=course)
+                    
+                    # Send Receipt Email
+                    try:
+                        amount_naira = (data.get('amount') or 0) / 100.0
+                        context = {
                             'user': request.user,
                             'course': course,
-                            'amount': data.get('amount') or 0,
+                            'reference': data.get('reference') or reference,
+                            'amount_naira': amount_naira,
                             'status': 'success',
-                            'raw': data,
+                            'paid_at': data.get('paid_at') or timezone.now(),
+                            'start_url': request.build_absolute_uri(reverse('course_detail', kwargs={'slug': slug})),
                         }
-                    )
-                    
-                    # Ensure Enrollment
-                    if not Enrollment.objects.filter(student=request.user, course=course).exists():
-                        Enrollment.objects.create(student=request.user, course=course)
+                        send_html_email(
+                            subject=f'Payment Receipt - {course.title}',
+                            template_name='emails/payment_receipt.html',
+                            context=context,
+                            recipient_list=[request.user.email],
+                            request=request
+                        )
+                    except Exception as email_err:
+                        print(f"Error sending receipt email: {email_err}")
                         
-                        # Send Receipt Email
-                        try:
-                            amount_naira = (data.get('amount') or 0) / 100.0
-                            context = {
-                                'user': request.user,
-                                'course': course,
-                                'reference': data.get('reference') or reference,
-                                'amount_naira': amount_naira,
-                                'status': 'success',
-                                'paid_at': data.get('paid_at') or timezone.now(),
-                                'start_url': request.build_absolute_uri(reverse('course_detail', kwargs={'slug': slug})),
-                            }
-                            send_html_email(
-                                subject=f'Payment Receipt - {course.title}',
-                                template_name='emails/payment_receipt.html',
-                                context=context,
-                                recipient_list=[request.user.email],
-                                request=request
-                            )
-                        except Exception as email_err:
-                            print(f"Error sending receipt email: {email_err}")
-                            
-                    messages.success(request, f'Payment successful. You are now enrolled in {course.title}.')
-                    return redirect('payment_success', slug=slug)
-                
-                last_error_message = res.get('message') or (data.get('gateway_response') if isinstance(data, dict) else None) or 'Payment pending or not successful.'
-                
-        except (HTTPError, URLError) as e:
+                messages.success(request, f'Payment successful. You are now enrolled in {course.title}.')
+                return redirect('payment_success', slug=slug)
+            
+            last_error_message = res.get('message') or (data.get('gateway_response') if isinstance(data, dict) else None) or 'Payment pending or not successful.'
+            
+        except requests.exceptions.RequestException as e:
             last_error_message = f"Connection error: {str(e)}"
         except Exception as e:
             last_error_message = f"Verification failed: {str(e)}"
